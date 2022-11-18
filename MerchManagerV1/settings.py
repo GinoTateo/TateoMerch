@@ -23,10 +23,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-6_42+fg2^z+-_qt#38uvn)6vb+$8#!&omfdq+-p_#bnryq*@(t'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ["50.116.14.199"]
+ALLOWED_HOSTS = ["50.116.14.199",'TateoMerch.com',"127.0.0.1"]
 
+CSRF_TRUSTED_ORIGINS = ['TateoMerch.com',"50.116.14.199","127.0.0.1"]
 
 # Application definition
 
