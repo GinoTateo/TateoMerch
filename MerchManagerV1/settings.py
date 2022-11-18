@@ -122,7 +122,7 @@ STATIC_URL = '/var/www/DjangoApp/static/'
 # STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATIC_ROOT = "/var/www/DjangoApp/static/"
 
-MEDIA_URL = '/var/www/DjangoApp/media'
+MEDIA_URL = '/var/www/DjangoApp/media/'
 MEDIA_ROOT = "/var/www/DjangoApp/media/"
 # MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
