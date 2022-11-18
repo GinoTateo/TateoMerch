@@ -25,9 +25,7 @@ SECRET_KEY = 'django-insecure-6_42+fg2^z+-_qt#38uvn)6vb+$8#!&omfdq+-p_#bnryq*@(t
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["50.116.14.199",'TateoMerch.com',"127.0.0.1"]
-
-CSRF_TRUSTED_ORIGINS = ['TateoMerch.com',"50.116.14.199","127.0.0.1"]
+ALLOWED_HOSTS = ["50.116.14.199",'TateoMerch.com',"127.0.0.1","192.168.4.96"]
 
 # Application definition
 
@@ -121,11 +119,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static'),]
+# STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_ROOT = "/var/www/DjangoApp/static/"
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
-
+MEDIA_ROOT = "/var/www/DjangoApp/images/"
+# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 # Default primary key field type
