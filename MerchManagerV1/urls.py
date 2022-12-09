@@ -28,6 +28,11 @@ urlpatterns = [
     path('', views.home, name='index'),
     path('home', views.home, name='index'),
     path('account/', views.account, name='account'),
+    path('login', views.loginrequest, name='login'),
+    path('add/', views.add, name='index'),
+    path('add/store', views.addStore, name='create merch'),
+    path('add/merch', views.addMerch, name='create merch'),
+    path('add/EOW', views.addWD, name='create merch'),
 ]
 
 if settings.DEBUG:  # new

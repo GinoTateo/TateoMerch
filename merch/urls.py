@@ -11,7 +11,11 @@ urlpatterns = [
     path('account', views.account, name='account'),
     path('login', views.loginrequest, name='login'),
     path('<int:merch_id>/', views.detail, name='detail'),
-    path('<merchuser>/', views.merchuser, name='merchuser'),
+    path('add', views.add, name='add toolbar'),
+    path('add/store', views.addStore, name='create merch'),
+    path('add/merch', views.addMerch, name='create merch'),
+    path('add/EOW', views.addWD, name='create merch'),
+    path('<merchuser>/', views.merchuser, name='merch-user'),
 ]
 
 if settings.DEBUG:  # new

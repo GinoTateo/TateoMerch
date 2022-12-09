@@ -6,6 +6,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import resolve
 
+from .forms import StoreForm, MerchForm, WeeklyDataForm, StoreForm2
 from .models import Merch, WeeklyData
 from django.template import loader
 from django.contrib import messages
@@ -79,3 +80,57 @@ def account(request):
     }
 
     return render(request, 'merchuser.html', context)
+
+@login_required(login_url='login')
+def add(request):
+    return render(request, 'addHome.html')
+
+@login_required(login_url='login')
+def addStore(request):
+    if request.method == 'POST':
+        form = StoreForm2(request.POST)
+        if form.is_valid():
+            return redirect('/add')
+
+    else:
+        form = StoreForm2()
+
+    return render(request,
+                'add.html',
+                {'form': form})
+
+@login_required(login_url='login')
+def addMerch(request):
+    if request.method == 'POST':
+        form = MerchForm(request.POST)
+        if form.is_valid():
+            # create a new `Band` and save it to the db
+            merch = form.save()
+            # redirect to the detail page of the band we just created
+            # we can provide the url pattern arguments as arguments to redirect function
+            return redirect('/add')
+
+    else:
+        form = MerchForm()
+
+    return render(request,
+                'add.html',
+                {'form': form})
+
+@login_required(login_url='login')
+def addWD(request):
+    if request.method == 'POST':
+        form = WeeklyDataForm(request.POST)
+        if form.is_valid():
+            # create a new `Band` and save it to the db
+            WD = form.save()
+            # redirect to the detail page of the band we just created
+            # we can provide the url pattern arguments as arguments to redirect function
+            return redirect('/add')
+
+    else:
+        form = WeeklyDataForm()
+
+    return render(request,
+                'add.html',
+                {'form': form})
