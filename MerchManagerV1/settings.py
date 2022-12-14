@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-6_42+fg2^z+-_qt#38uvn)6vb+$8#!&omfdq+-p_#bnryq*@(t
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['127.0.0.1','tateomerch.herokuapp.com']
+ALLOWED_HOSTS = ['127.0.0.1','tateomerch.herokuapp.com','TateoMerch.com']
 
 # Application definition
 
