@@ -10,7 +10,7 @@ class Merch(models.Model):
     OOS = models.IntegerField(max_length=2, default=0)
     case_count = models.IntegerField(max_length=2, default=0)
     date = models.DateTimeField(auto_now_add=True)
-    upload = models.ImageField(upload_to='media/images', default="N/A")
+    upload = models.ImageField(upload_to='images', default="N/A")
     def __str__(self):
         return f'{self.store} |  {self.date}'
 

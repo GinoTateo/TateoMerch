@@ -16,7 +16,9 @@ Including another URLconf
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.auth.models import User
+from django.template.defaulttags import url
 from django.urls import include, path
+from django.views.static import serve
 
 from MerchManagerV1 import settings
 from merch import views
@@ -33,7 +35,11 @@ urlpatterns = [
     path('add/store', views.addStore, name='create merch'),
     path('add/merch', views.addMerch, name='create merch'),
     path('add/EOW', views.addWD, name='create merch'),
+
+    # url(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+    # url(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
 ]
 
 if settings.DEBUG:  # new
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
