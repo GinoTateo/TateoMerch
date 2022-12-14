@@ -1,2 +1,2 @@
-release: python3 manage.py migrate
-web: gunicorn TateoMerch.wsgi
+release: python manage.py migrate
+web: gunicorn MerchManagerV1.wsgi
