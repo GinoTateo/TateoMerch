@@ -21,12 +21,13 @@ def index(request):
     }
     return HttpResponse(template.render(context, request))
 
+
 @login_required(login_url='login')
 def detail(request, merch_id):
     merch = get_object_or_404(Merch, pk=merch_id)
     return render(request, 'detail.html', {'merch': merch})
 
-@login_required(login_url='login')
+
 def home(request):
     latest_list = WeeklyData.objects.order_by('-date')[:5]
     template = loader.get_template('home.html')
@@ -34,6 +35,7 @@ def home(request):
         'latest_list': latest_list,
     }
     return HttpResponse(template.render(context, request))
+
 
 def loginrequest(request):
     if request.method == "POST":
@@ -48,13 +50,13 @@ def loginrequest(request):
                 messages.info(request, f"You are now logged in as {username}.")
                 return redirect("index")
             else:
-                messages.error(request,"Invalid username or password.")
+                messages.error(request, "Invalid username or password.")
         else:
-            messages.error(request,"Invalid username or password.")
+            messages.error(request, "Invalid username or password.")
     form = AuthenticationForm()
-    return render(request=request, template_name="login.html", context={"login_form":form})
+    return render(request=request, template_name="login.html", context={"login_form": form})
 
-@login_required(login_url='login')
+
 def merchuser(request, merchuser):
     user = get_object_or_404(User, username=merchuser)
     profile = User.objects.get(username=user)
@@ -66,6 +68,7 @@ def merchuser(request, merchuser):
     }
 
     return render(request, 'merchuser.html', context)
+
 
 @login_required(login_url='login')
 def account(request):
@@ -81,56 +84,55 @@ def account(request):
 
     return render(request, 'merchuser.html', context)
 
+
 @login_required(login_url='login')
 def add(request):
     return render(request, 'addHome.html')
+
 
 @login_required(login_url='login')
 def addStore(request):
     if request.method == 'POST':
         form = StoreForm2(request.POST)
         if form.is_valid():
+            form.save()
             return redirect('/add')
 
     else:
         form = StoreForm2()
 
     return render(request,
-                'add.html',
-                {'form': form})
+                  'add.html',
+                  {'form': form})
+
 
 @login_required(login_url='login')
 def addMerch(request):
     if request.method == 'POST':
         form = MerchForm(request.POST)
         if form.is_valid():
-            # create a new `Band` and save it to the db
-            merch = form.save()
-            # redirect to the detail page of the band we just created
-            # we can provide the url pattern arguments as arguments to redirect function
+            form.save()
             return redirect('/add')
 
     else:
         form = MerchForm()
 
     return render(request,
-                'add.html',
-                {'form': form})
+                  'add.html',
+                  {'form': form})
+
 
 @login_required(login_url='login')
 def addWD(request):
     if request.method == 'POST':
         form = WeeklyDataForm(request.POST)
         if form.is_valid():
-            # create a new `Band` and save it to the db
-            WD = form.save()
-            # redirect to the detail page of the band we just created
-            # we can provide the url pattern arguments as arguments to redirect function
+            form.save()
             return redirect('/add')
 
     else:
         form = WeeklyDataForm()
 
     return render(request,
-                'add.html',
-                {'form': form})
+                  'add.html',
+                  {'form': form})
