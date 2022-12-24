@@ -1,13 +1,19 @@
+from datetime import timezone
+
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
+from django.template.context_processors import request
 from django.urls import resolve
+from django.views import View
 
 from .forms import StoreForm, MerchForm, WeeklyDataForm, StoreForm2
-from .models import Merch, WeeklyData
+from .models import Merch, WeeklyData, Order, Item, OrderItem
 from django.template import loader
 from django.contrib import messages
 
@@ -136,3 +142,116 @@ def addWD(request):
     return render(request,
                   'add.html',
                   {'form': form})
+
+@login_required
+def OrderSummaryView(request):
+        # current_user = request.user
+        # user = get_object_or_404(User, username=current_user)
+        user = User.objects.get(username=request.user)
+        order = Order.objects.filter(user=user)
+        context = {
+            'object' : order
+        }
+
+        return render(request, 'order_summary.html', context)
+
+
+# class OrderSummaryView(LoginRequiredMixin, View):
+#     def get(self, *args, **kwargs):
+#
+#         try:
+#             user = get_object_or_404(User, username=self.kwargs.get('username'))
+#             order = Order.objects.get(user, ordered=False)
+#             context = {
+#                 'object' : order
+#             }
+#             return render(self.request, 'order_summary.html', context)
+#         except ObjectDoesNotExist:
+#             messages.error(self.request, "You do not have an order")
+#             return redirect("order_summary.html")
+
+@login_required
+def add_to_cart(request, pk):
+    item = get_object_or_404(Item, pk=pk )
+    order_item, created = OrderItem.objects.get_or_create(
+        item = item,
+        user = request.user,
+        ordered = False
+    )
+    order_qs = Order.objects.filter(user=request.user, ordered=False)
+
+    if order_qs.exists():
+        order = order_qs[0]
+
+        if order.items.filter(item__pk=item.pk).exists():
+            order_item.quantity += 1
+            order_item.save()
+            messages.info(request, "Added quantity Item")
+            return redirect("core:order-summary")
+        else:
+            order.items.add(order_item)
+            messages.info(request, "Item added to your cart")
+            return redirect("core:order-summary")
+    else:
+        ordered_date = timezone.now()
+        order = Order.objects.create(user=request.user, ordered_date=ordered_date)
+        order.items.add(order_item)
+        messages.info(request, "Item added to your cart")
+        return redirect("core:order-summary")
+
+@login_required
+def remove_from_cart(request, pk):
+    item = get_object_or_404(Item, pk=pk )
+    order_qs = Order.objects.filter(
+        user=request.user,
+        ordered=False
+    )
+    if order_qs.exists():
+        order = order_qs[0]
+        if order.items.filter(item__pk=item.pk).exists():
+            order_item = OrderItem.objects.filter(
+                item=item,
+                user=request.user,
+                ordered=False
+            )[0]
+            order_item.delete()
+            messages.info(request, "Item \""+order_item.item.item_name+"\" remove from your cart")
+            return redirect("core:order-summary")
+        else:
+            messages.info(request, "This Item not in your cart")
+            return redirect("core:product", pk=pk)
+    else:
+        #add message doesnt have order
+        messages.info(request, "You do not have an Order")
+        return redirect("core:product", pk = pk)
+
+
+@login_required
+def reduce_quantity_item(request, pk):
+    item = get_object_or_404(Item, pk=pk )
+    order_qs = Order.objects.filter(
+        user = request.user,
+        ordered = False
+    )
+    if order_qs.exists():
+        order = order_qs[0]
+        if order.items.filter(item__pk=item.pk).exists() :
+            order_item = OrderItem.objects.filter(
+                item = item,
+                user = request.user,
+                ordered = False
+            )[0]
+            if order_item.quantity > 1:
+                order_item.quantity -= 1
+                order_item.save()
+            else:
+                order_item.delete()
+            messages.info(request, "Item quantity was updated")
+            return redirect("core:order-summary")
+        else:
+            messages.info(request, "This Item not in your cart")
+            return redirect("core:order-summary")
+    else:
+        #add message doesnt have order
+        messages.info(request, "You do not have an Order")
+        return redirect("core:order-summary")

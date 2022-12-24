@@ -12,7 +12,11 @@
   </head>
 
 <body>
+
+
         {% extends 'navbar.html' %}
+
+
 
   {% block content %}
 
@@ -33,9 +37,7 @@
                     <a href="/merch" class="btn btn-primary">View more</a>
               </div>
             </div>
-
-                                  {% endfor %}
-                            </ul>
+                            {% endfor %}
                              {% else %}
                             <p>No merch are available.</p>
                             {% endif %}
