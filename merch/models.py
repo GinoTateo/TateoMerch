@@ -4,15 +4,20 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
 from django.shortcuts import redirect, reverse
 
-CATEGORY = (
-    ('PG', 'PW'),
-    ('IG', 'IW'),
-    ('SG', 'SW')
+TYPE = (
+    ('G', 'Ground'),
+    ('W', 'Whole Bean'),
 )
 
-LABEL = (
-    ('10.5', '18'),
-    ('10', '12')
+BRAND = (
+    ('P', 'Peets'),
+    ('I', 'Intelligentsia'),
+    ('S', 'Stumptown'),
+)
+
+SIZE = (
+    ('18', '18oz'),
+    ('10.5', '10.5oz')
 )
 
 class Merch(models.Model):
@@ -43,11 +48,12 @@ class WeeklyData(models.Model):
 class Item(models.Model):
     item_name = models.CharField(max_length=100)
     item_number = models.IntegerField(default=0)
-    item_size = models.IntegerField(default=0)
-    description = models.TextField()
+    item_size = models.CharField(choices=SIZE, max_length=25)
+    item_type = models.CharField(choices=TYPE, max_length=25)
+    item_brand = models.CharField(choices=BRAND, max_length=25,default='P')
 
     def __str__(self):
-        return self.item_name
+        return self.item_name + ' ' + self.item_brand + self.item_type + self.item_size
 
     def get_absolute_url(self):
         return reverse("product", kwargs={

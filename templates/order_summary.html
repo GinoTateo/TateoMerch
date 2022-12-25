@@ -34,15 +34,16 @@
         <tr>
             <th scope="col">#</th>
             <th scope="col">Item Name</th>
+            <th scope="col">Item Type</th>
             <th scope="col">Item Number</th>
             <th scope="col">Quantity</th>
-            <th scope="col">Total Item Price</th>
         </tr>
         </thead>
         <tbody>
             {% for item in Order.items.all %}
         <tr>
             <th scope="row">{{ forloop.counter }}</th>
+            <td>{{ item.item.item_name}}</td>
             <td>{{ item.item.item_name}}</td>
             <td>
                 {{ item.item.item_number}}
