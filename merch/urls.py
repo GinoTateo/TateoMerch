@@ -3,7 +3,7 @@ from django.conf.urls.static import static
 from MerchManagerV1 import settings
 from django.views.static import serve
 from . import views
-from .views import OrderSummaryView, add_to_cart, remove_from_cart, reduce_quantity_item
+from .views import OrderSummaryView, add_to_cart, remove_from_cart, reduce_quantity_item, ProductView, orderForm
 
 urlpatterns = [
     path('', views.index, name='index'),
@@ -20,8 +20,11 @@ urlpatterns = [
     path('order-summary', views.OrderSummaryView, name='order-summary'),
     # path('order-summary', OrderSummaryView.as_view(), name='order-summary'),
     path('add-to-cart/<pk>/', add_to_cart, name='add-to-cart'),
+    path('add-to-cart/<pk>/<int:quantity>/', add_to_cart, name='add-to-cart'),
     path('remove-from-cart/<pk>/', remove_from_cart, name='remove-from-cart'),
-    path('reduce-quantity-item/<pk>/', reduce_quantity_item, name='reduce-quantity-item')
+    path('reduce-quantity-item/<pk>/', reduce_quantity_item, name='reduce-quantity-item'),
+    path('product/<pk>/', ProductView.as_view(), name='product'),
+    path('orderform', orderForm.as_view(), name='order-form'),
 ]
 
 if settings.DEBUG:  # new

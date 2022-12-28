@@ -1,4 +1,3 @@
-from datetime import timezone
 
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
@@ -10,7 +9,9 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.template.context_processors import request
 from django.urls import resolve
+from django.utils import timezone
 from django.views import View
+from django.views.generic import DetailView, ListView
 
 from .forms import StoreForm, MerchForm, WeeklyDataForm, StoreForm2
 from .models import Merch, WeeklyData, Order, Item, OrderItem
@@ -27,6 +28,9 @@ def index(request):
     }
     return HttpResponse(template.render(context, request))
 
+class ProductView(DetailView):
+    model = Item
+    template_name = "order_page.html"
 
 @login_required(login_url='login')
 def detail(request, merch_id):
@@ -171,7 +175,7 @@ def OrderSummaryView(request):
 #             return redirect("order_summary.html")
 
 @login_required
-def add_to_cart(request, pk):
+def add_to_cart(request, pk, quantity):
     item = get_object_or_404(Item, pk=pk )
     order_item, created = OrderItem.objects.get_or_create(
         item = item,
@@ -184,20 +188,20 @@ def add_to_cart(request, pk):
         order = order_qs[0]
 
         if order.items.filter(item__pk=item.pk).exists():
-            order_item.quantity += 1
+            order_item.quantity += quantity
             order_item.save()
             messages.info(request, "Added quantity Item")
-            return redirect("core:order-summary")
+            return redirect("order-form")
         else:
             order.items.add(order_item)
             messages.info(request, "Item added to your cart")
-            return redirect("core:order-summary")
+            return redirect("order-summary")
     else:
         ordered_date = timezone.now()
         order = Order.objects.create(user=request.user, ordered_date=ordered_date)
         order.items.add(order_item)
         messages.info(request, "Item added to your cart")
-        return redirect("core:order-summary")
+        return redirect("order-summary")
 
 @login_required
 def remove_from_cart(request, pk):
@@ -215,15 +219,15 @@ def remove_from_cart(request, pk):
                 ordered=False
             )[0]
             order_item.delete()
-            messages.info(request, "Item \""+order_item.item.item_name+"\" remove from your cart")
-            return redirect("core:order-summary")
+            messages.info(request, "Item \""+order_item.item.item_name+"\" remove from order")
+            return redirect("order-summary")
         else:
-            messages.info(request, "This Item not in your cart")
-            return redirect("core:product", pk=pk)
+            messages.info(request, "This Item is not in your order")
+            return redirect("product", pk=pk)
     else:
         #add message doesnt have order
         messages.info(request, "You do not have an Order")
-        return redirect("core:product", pk = pk)
+        return redirect("product", pk = pk)
 
 
 @login_required
@@ -247,11 +251,15 @@ def reduce_quantity_item(request, pk):
             else:
                 order_item.delete()
             messages.info(request, "Item quantity was updated")
-            return redirect("core:order-summary")
+            return redirect("order-summary")
         else:
             messages.info(request, "This Item not in your cart")
-            return redirect("core:order-summary")
+            return redirect("order-summary")
     else:
         #add message doesnt have order
         messages.info(request, "You do not have an Order")
-        return redirect("core:order-summary")
+        return redirect("order-summary")
+
+class orderForm(ListView):
+    model = Item
+    template_name = "order_form.html"
