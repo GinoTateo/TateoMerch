@@ -13,7 +13,7 @@ from django.utils import timezone
 from django.views import View
 from django.views.generic import DetailView, ListView
 
-from .forms import StoreForm, MerchForm, WeeklyDataForm, StoreForm2
+from .forms import StoreForm, MerchForm, WeeklyDataForm, StoreForm2, ItemForm
 from .models import Merch, WeeklyData, Order, Item, OrderItem
 from django.template import loader
 from django.contrib import messages
@@ -58,7 +58,7 @@ def loginrequest(request):
             if user is not None:
                 login(request, user)
                 messages.info(request, f"You are now logged in as {username}.")
-                return redirect("index")
+                return redirect("home")
             else:
                 messages.error(request, "Invalid username or password.")
         else:
@@ -147,6 +147,21 @@ def addWD(request):
                   'add.html',
                   {'form': form})
 
+@login_required(login_url='login')
+def addItem(request):
+    if request.method == 'POST':
+        form = ItemForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('/add')
+
+    else:
+        form = ItemForm()
+
+    return render(request,
+                  'add.html',
+                  {'form': form})
+
 @login_required
 def OrderSummaryView(request):
         # current_user = request.user
@@ -194,14 +209,18 @@ def add_to_cart(request, pk, quantity):
             return redirect("order-form")
         else:
             order.items.add(order_item)
+            order_item.quantity += quantity - 1
+            order_item.save()
             messages.info(request, "Item added to your cart")
-            return redirect("order-summary")
+            return redirect("order-form")
     else:
         ordered_date = timezone.now()
         order = Order.objects.create(user=request.user, ordered_date=ordered_date)
         order.items.add(order_item)
+        order_item.quantity += quantity - 1
+        order_item.save()
         messages.info(request, "Item added to your cart")
-        return redirect("order-summary")
+        return redirect("order-form")
 
 @login_required
 def remove_from_cart(request, pk):

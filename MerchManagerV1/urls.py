@@ -32,9 +32,10 @@ urlpatterns = [
     path('account/', views.account, name='account'),
     path('login', views.loginrequest, name='login'),
     path('add/', views.add, name='index'),
-    path('add/store', views.addStore, name='create merch'),
+    path('add/store', views.addStore, name='create store'),
     path('add/merch', views.addMerch, name='create merch'),
-    path('add/EOW', views.addWD, name='create merch'),
+    path('add/EOW', views.addWD, name='create EOW'),
+    path('add/Item', views.addItem, name='create item'),
 
     # url(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
     # url(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),

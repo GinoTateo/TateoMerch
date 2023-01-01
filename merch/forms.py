@@ -1,9 +1,15 @@
 from django import forms
-from .models import Store, Merch, WeeklyData, User
+from .models import Store, Merch, WeeklyData, User, Item
+
 
 class StoreForm(forms.ModelForm):
    class Meta:
      model = Store
+     fields = '__all__'
+
+class ItemForm(forms.ModelForm):
+   class Meta:
+     model = Item
      fields = '__all__'
 
 class MerchForm(forms.ModelForm):
@@ -27,3 +33,12 @@ class MerchForm2(forms.ModelForm):
        OOS = forms.IntegerField()
        case_count = forms.IntegerField()
        upload = forms.ImageField()
+
+
+
+class MerchForm3(forms.ModelForm):
+   class Meta:
+       user = forms.ModelChoiceField(queryset=User.objects.all())
+       store = forms.ModelChoiceField(queryset=Store.objects)
+       OOS = forms.ModelMultipleChoiceField(queryset=Item.objects)
+       case_count = forms.IntegerField()

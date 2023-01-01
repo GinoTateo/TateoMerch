@@ -26,7 +26,7 @@
         <br>
         {% if object %}
             {% for Order in object %}
-        <strong>{{ Order.user}} order</strong>
+        <strong>{{ Order.user }} order</strong>
 
     </h3>
     <table class="table">
@@ -65,11 +65,11 @@
             <td colspan="5">Your Cart is Empty</td>
         </tr>
 
-         <tr>
-            <td colspan="5">
-                <a href="/" class="btn btn-primary float-right">Continue Shopping</a>
-            </td>
-        </tr>
+{#         <tr>#}
+{#            <td colspan="5">#}
+{#                <a href="/" class="btn btn-primary float-right">Continue Shopping</a>#}
+{#            </td>#}
+{#        </tr>#}
 
         {% endfor %}
 

@@ -17,13 +17,22 @@
 
       <div class="card">
               <div class="card-body">
-                  <h4 class="card-title">{{ merch.store }}</h4>
+                <h4 class="card-title">{{ merch.store }}</h4>
                 <h6>{{ merch.date }}</h6>
-                Out of stocks: {{ merch.OOS }}
                 <br>
-                Cases: {{ merch.case_count }}
-                <br>
-                <img src= "{{ merch.upload.url }}" alt="{{ merch.store }}" width="300" height="500">
+                <h6>Cases worked: {{ merch.case_count }}</h6>
+                  <h6>Out of stocks: {{ merch.OOS.count }}</h6>
+                    <div>
+                        <h6>
+                        <br>
+                          {% for item in merch.OOS.all %}
+                              <p>{{ forloop.counter }}. {{ item.item.item_name }}
+                          {% empty %}
+                              No out of stocks
+                          {% endfor %}
+                        </h6>
+                    </div>
+{#                <img src= "{{ merch.upload.url }}" alt="{{ merch.store }}" width="300" height="500">#}
               </div>
       </div>
 

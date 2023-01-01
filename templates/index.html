@@ -22,8 +22,8 @@
 
                                 <ul>
                                 <h6>{{ merch.date }}</h6>
-                                    <h6> Out of Stocks: {{ merch.OOS }}</h6>
-                                    <h6>Case Count: {{ merch.case_count }}</h6>
+                                <h6> Out of Stocks: {{ merch.OOS.count }} </h6>
+                                <h6>Case Count: {{ merch.case_count }}</h6>
                                 </ul>
 
                 <a href="/merch/{{ merch.id }}" class="btn btn-primary">View more</a>

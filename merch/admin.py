@@ -3,6 +3,7 @@ from django.utils.datetime_safe import datetime
 from django.contrib import admin
 from .models import Merch, Store, WeeklyData, Item, Order, OrderItem
 
+
 class EntryAdmin(admin.ModelAdmin):
     # Overide of the save model
     def save_model(self, request, obj, form, change):

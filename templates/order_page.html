@@ -44,12 +44,32 @@
             </div>
 
             <p class="lead">
-              {{ item.item_brand }}{{ item.item_type }} {{ object.item_size }}
+              {{ item.item_brand }}{{ item.item_type }} {{ object.item_size }} {{ object.item_name }}
             </p>
 
-            <p class="lead font-weight-bold">{{ object.item_name }}</p>
+            <p>
+              <nav class="d-flex wow fadeIn">
+                        <ul class="pagination pg-blue">
 
-            <p>{{ object.description }}</p>
+                          <li class="page-item active">
+                            <a class="page-link" href="{{ item.get_add_to_cart_url }}1">1</a>
+                          </li>
+                          <li class="page-item">
+                            <a class="page-link" href="{{ item.get_add_to_cart_url }}3">3</a>
+                          </li>
+                          <li class="page-item">
+                            <a class="page-link" href="{{ item.get_add_to_cart_url }}5">5</a>
+                          </li>
+                          <li class="page-item">
+                            <a class="page-link" href="{{ item.get_add_to_cart_url }}10">10</a>
+                          </li>
+                          <li class="page-item">
+                            <a class="page-link" href="{{ item.get_add_to_cart_url }}15">15</a>
+                          </li>
+
+                        </ul>
+                     </nav>
+              </p>
 
             {% comment %} <form class="d-flex justify-content-left">
               <!-- Default input -->
@@ -60,9 +80,9 @@
 
             </form> {% endcomment %}
 
-            <a href="{{ object.get_add_to_cart_url }}5" class="btn btn-primary btn-md my-0 p">Add to order
-                <i class="fas fa-shopping-cart ml-1"></i>
-            </a>
+{#            <a href="{{ object.get_add_to_cart_url }}5" class="btn btn-primary btn-md my-0 p">Add to order#}
+{#                <i class="fas fa-shopping-cart ml-1"></i>#}
+{#            </a>#}
 
             {{ object.get_quantity_in_chart }}
             <a href="{{ object.get_remove_from_cart_url }}" class="btn btn-danger btn-md my-0 p" >Remove From order

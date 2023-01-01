@@ -27,7 +27,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', default='your secret key')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1','tateomerch.onrender.com','TateoMerch.com']
+ALLOWED_HOSTS = ['127.0.0.1','tateomerch.onrender.com','TateoMerch.com','192.168.4.96']
 
 # Application definition
 
