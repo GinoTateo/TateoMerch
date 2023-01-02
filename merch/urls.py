@@ -12,6 +12,7 @@ urlpatterns = [
     path('about', views.index, name='about'),
     path('account', views.account, name='account'),
     path('login', views.loginrequest, name='login'),
+    path('logout', views.logout_view, name='login'),
     path('<int:merch_id>/', views.detail, name='detail'),
     path('add', views.add, name='add toolbar'),
     path('add/store', views.addStore, name='create merch'),

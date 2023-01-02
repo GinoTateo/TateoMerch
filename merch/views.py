@@ -1,5 +1,5 @@
 
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -66,6 +66,9 @@ def loginrequest(request):
     form = AuthenticationForm()
     return render(request=request, template_name="login.html", context={"login_form": form})
 
+def logout_view(request):
+    logout(request)
+    return render(request, 'home.html')
 
 def merchuser(request, merchuser):
     user = get_object_or_404(User, username=merchuser)
