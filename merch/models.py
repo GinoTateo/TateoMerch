@@ -89,12 +89,14 @@ class Merch(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     store = models.ForeignKey('Store', on_delete=models.CASCADE, default="Safeway")
     OOS = models.ManyToManyField(Item)
-    OOS_count = models.IntegerField(max_length=2, default=0)
     case_count = models.IntegerField(max_length=2, default=0)
     date = models.DateTimeField(auto_now_add=True)
     upload = models.ImageField(upload_to='images', default="N/A")
     def __str__(self):
         return f'{self.store} |  {self.date}'
+
+    def get_num_OOS(self):
+            return self.OOS.count()
 
 class Store(models.Model):
     name = models.CharField(default= "Safeway", choices=STORE, max_length=25)

@@ -26,13 +26,13 @@
                         <h6>
                         <br>
                           {% for item in merch.OOS.all %}
-                              <p>{{ forloop.counter }}. {{ item.item.item_name }}
+                              <p>{{ forloop.counter }}. {{ item.item_name }}
                           {% empty %}
                               No out of stocks
                           {% endfor %}
                         </h6>
                     </div>
-{#                <img src= "{{ merch.upload.url }}" alt="{{ merch.store }}" width="300" height="500">#}
+                <img src= "{{ merch.upload.url }}" alt="{{ merch.store }}" width="300" height="500">
               </div>
       </div>
 
