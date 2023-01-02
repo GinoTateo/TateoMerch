@@ -88,7 +88,7 @@ class OrderItem(models.Model):
 class Merch(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     store = models.ForeignKey('Store', on_delete=models.CASCADE, default="Safeway")
-    OOS = models.ManyToManyField(Item)
+    OOS = models.ManyToManyField(Item, blank=True)
     case_count = models.IntegerField(max_length=2, default=0)
     date = models.DateTimeField(auto_now_add=True)
     upload = models.ImageField(upload_to='images', default="N/A")
