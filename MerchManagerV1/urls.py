@@ -38,6 +38,7 @@ urlpatterns = [
     path('add/Item', views.addItem, name='create item'),
     path('logout', views.logout_view, name='login'),
     path('accounts/login/', views.loginrequest, name='login'),
+    path('route-review', views.RouteReview, name='route-review'),
 
     # url(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
     # url(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),

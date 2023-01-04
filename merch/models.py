@@ -37,8 +37,12 @@ KSIZE = (
 STORE = (
     ('Safeway', 'Safeway'),
     ('Lucky', 'Lucky'),
+    ('FoodMaxx', 'FoodMaxx'),
+    ('SaveMart', 'SaveMart'),
+    ('Lunardis', 'Lunardis'),
     ('Nob Hill', 'Nob Hill'),
     ('Wholefoods', 'Wholefoods'),
+    ('BerkeleyBowl', 'BerkeleyBowl'),
 )
 
 class Item(models.Model):
@@ -100,12 +104,13 @@ class Merch(models.Model):
 
 class Store(models.Model):
     name = models.CharField(default= "Safeway", choices=STORE, max_length=25)
-    number = models.IntegerField(default= "N/A", max_length=100)
-    City = models.CharField(default= "N/A", max_length=25)
-    Service_days = models.CharField(default= "N/A", max_length=25)
-    Area = models.CharField(default= "N/A", max_length=25)
-    Address = models.CharField(default= "N/A", max_length=50)
-    BS_Location = models.CharField(default= "N/A", max_length=50)
+    number = models.IntegerField(default= "", max_length=100, blank=True, null=True)
+    City = models.CharField(default= "", max_length=25)
+    Service_days = models.CharField(default= "", max_length=25)
+    RSRrt = models.IntegerField(default="", max_length=100)
+    Area = models.CharField(default= "", max_length=25)
+    Address = models.CharField(default= "", max_length=50)
+    BS_Location = models.CharField(default= "", max_length=50)
     def __str__(self):
         return f'{self.name} {self.number}'
 

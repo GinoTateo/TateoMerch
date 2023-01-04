@@ -14,7 +14,7 @@ from django.views import View
 from django.views.generic import DetailView, ListView
 
 from .forms import StoreForm, MerchForm, WeeklyDataForm, StoreForm2, ItemForm
-from .models import Merch, WeeklyData, Order, Item, OrderItem
+from .models import Merch, WeeklyData, Order, Item, OrderItem, Store
 from django.template import loader
 from django.contrib import messages
 
@@ -177,6 +177,25 @@ def OrderSummaryView(request):
 
         return render(request, 'order_summary.html', context)
 
+@login_required
+def RouteReview(request):
+        user = User.objects.get(username=request.user)
+        rtmd = Store.objects.filter(RSRrt=user.username)
+        context = {
+            'list' : rtmd
+        }
+
+        return render(request, 'route-review.html', context)
+
+@login_required
+def StoreData(request, storeid):
+        user = User.objects.get(username=request.user)
+        rtmd = Store.objects.filter(RSRrt=user.username)
+        context = {
+            'list' : rtmd
+        }
+
+        return render(request, 'route-review.html', context)
 
 # class OrderSummaryView(LoginRequiredMixin, View):
 #     def get(self, *args, **kwargs):
