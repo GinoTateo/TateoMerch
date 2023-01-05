@@ -8,48 +8,125 @@
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
 
-    <title>TateoMerch Home</title>
+    <title>Home</title>
+
+
   </head>
 
-<body>
+  <style>
 
+figure{
+    width:250px;
+    height:150px;
+    border-radius:40px;
+    border:2px solid #A770EF;
+    box-shadow: 0 30px 40px rgba(0,0,0,.1);
+    color: #000000;
+    position:relative;
+    padding:48px 10px 10px;
+    background-image: linear-gradient(#FDB99B,#A770EF);
+    font-weight: lighter;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
-        {% extends 'navbar.html' %}
+figure:before {
+    content: attr(data-title);
+    position: absolute;
+    color: #000000;
+    top: 0px;
+    left: 0;
+    width: 100%;
+    height: 40px;
+    line-height: 40px;
+    text-indent: 10px;
+    border-bottom: 2px solid #A770EF;
+    font-style: oblique;
+    font-size: 20px;
+    font-weight: lighter;
+    box-shadow: 0 30px 40px rgba(0,0,0,.1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
+}
+.grad {
+    background-image: linear-gradient(#FDB99B,#CF8BF3,#A770EF); /*#2657eb*/
+}
 
+.blank_row {
+    height: 520px; /* overwrites any other rules */
+    background-color: #FFFFFF;
+}
 
+  </style>
 
-  {% block content %}
+<body class="grad">
 
-            {% if latest_list %}
+    {% extends 'navbar.html' %}
 
-                            {% for WeeklyData in latest_list %}
+    {% block content %}
 
-            <div class="card">
-              <div class="card-body">
-                <h5 class="card-title">{{ WeeklyData.date }}</h5>
-                  <a href="/merch/{{ WeeklyData.user }}">{{ WeeklyData.user }}</a> <br>
-                    <body>
-                                Stores: {{ WeeklyData.TotalStores }}
-                                <br>
-                                Total Cases: {{ WeeklyData.TotalCases }}
-                                <br>
-                    </body>
-                    <a href="/merch" class="btn btn-primary">View more</a>
-              </div>
+        <div>
+            <br>
+            <div class="d-flex justify-content-center">
+                <h1 style="font-size: 75px; font-weight: lighter">TateoMerch</h1>
             </div>
-                            {% endfor %}
-                             {% else %}
+            <div class="d-flex justify-content-center">
+                <p style="font-weight: lighter">The right product in the right place at the right time</p>
+            </div>
+        </div>
+        <div class="d-flex justify-content-center" >
+        <table>
+            <tr class="blank_row">
 
-              <a class="nav-link" href="/home">Home</a>
-              <a class="nav-link" href="/merch">Merch</a>
-                <a class="nav-link" href="/route-review">Route Review</a>
-              <a class="nav-link" href="/merch/orderform">Order Form</a>
-              <a class="nav-link" href="/merch/order-summary">Order Summary</a>
-              <a class="nav-link" href="/add" >Add</a>
-                            {% endif %}
+            </tr>
+          <tr>
+              <td>
+                <figure data-title="Product">
+                  <figcaption>
+                    Analyzes data to find the best product for the situation.
+                  </figcaption>
+                </figure>
+              </td>
+              <td>
+                <figure data-title="Price">
+                  <figcaption>
+                    Comprehensive sales data
+                  </figcaption>
+                </figure>
+              </td>
+              <td>
+                <figure data-title="Time">
+                  <figcaption>
+                    Our data tells us the best time to service our clients.
+                  </figcaption>
+                </figure>
+              </td>
+              <td>
+                <figure data-title="Quantity">
+                  <figcaption>
+                    Our data tells us how much product our clients need.
+                  </figcaption>
+                </figure>
+              </td>
+        </tr>
+        </table>
+        </div>
+
+
+
+
+
+
+
+
+
+
+
 
 {% endblock content %}
-
 </body>
 </html>
+

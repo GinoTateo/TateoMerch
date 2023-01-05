@@ -25,17 +25,30 @@
             </div>
           </div>
         </div>
-
+        {% if user.is_authenticated %}
         <div class="btn-group" style="margin-right: 15px">
             <button type="button" class="btn dropdown-toggle" data-bs-toggle='dropdown' aria-haspopup="true" aria-expanded="false">
-                Account
+                    Account
             </button>
-        <div class="dropdown-menu dropdown-menu-end">
-            <a class="dropdown-item" href="/account">Settings</a>
-            <div class="dropdown-divider"></div>
-            <a class="dropdown-item" href="/logout">Logout</a>
+            <div class="dropdown-menu dropdown-menu-end">
+                <a class="dropdown-item" href="/account">Settings</a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="/logout">Logout</a>
+            </div>
         </div>
-    </div>
+        {% else %}
+                        <button type="button" class="btn dropdown-toggle" data-bs-toggle='dropdown' aria-haspopup="true" aria-expanded="false">
+                    Account
+            </button>
+            <div class="dropdown-menu dropdown-menu-end">
+        <a class="nav-item nav-link" href="{% url 'login' %}">
+            Login
+        </a>
+        <a class="nav-item nav-link" href="{% url 'register' %}">
+            Register
+        </a>
+            </div>
+        {% endif %}
     </nav>
 
                 {% block content %}

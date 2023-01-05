@@ -37,6 +37,7 @@ urlpatterns = [
     path('add/EOW', views.addWD, name='create EOW'),
     path('add/Item', views.addItem, name='create item'),
     path('logout', views.logout_view, name='login'),
+    path('register', views.loginrequest, name='register'),
     path('accounts/login/', views.loginrequest, name='login'),
     path('route-review', views.RouteReview, name='route-review'),
 

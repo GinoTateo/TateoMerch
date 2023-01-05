@@ -14,6 +14,7 @@ urlpatterns = [
     # Account level
     path('account', views.account, name='account'),
     path('login', views.loginrequest, name='login'),
+    path('register', views.loginrequest, name='login'),
     path('logout', views.logout_view, name='logout'),
 
     # Add
