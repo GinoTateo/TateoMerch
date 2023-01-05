@@ -15,30 +15,35 @@ Including another URLconf
 """
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.contrib.auth.models import User
-from django.template.defaulttags import url
 from django.urls import include, path
-from django.views.static import serve
-
 from MerchManagerV1 import settings
 from merch import views
 
 urlpatterns = [
+
+    # Base patterns
     path('admin/', admin.site.urls),
     path('merch/', include('merch.urls')),
     path('api/', include('api.urls')),
+
     path('', views.home, name='index'),
+
+    #
     path('home', views.home, name='index'),
     path('account/', views.account, name='account'),
     path('login', views.loginrequest, name='login'),
+    path('logout', views.logout_view, name='login'),
+    path('register', views.loginrequest, name='register'),
+    path('accounts/login/', views.loginrequest, name='login'),
+
+    #
     path('add/', views.add, name='index'),
     path('add/store', views.addStore, name='create store'),
     path('add/merch', views.addMerch, name='create merch'),
     path('add/EOW', views.addWD, name='create EOW'),
     path('add/Item', views.addItem, name='create item'),
-    path('logout', views.logout_view, name='login'),
-    path('register', views.loginrequest, name='register'),
-    path('accounts/login/', views.loginrequest, name='login'),
+
+    #
     path('route-review', views.RouteReview, name='route-review'),
 
     # url(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
