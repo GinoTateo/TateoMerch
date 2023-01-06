@@ -26,11 +26,10 @@
                                     <h6>{{ store.BS_Location }}</h6>
                                 </ul>
 
-                <a href="merch/data/{{ store.name }}/{{ store.number }}" class="btn btn-primary">View data</a>
+                <a href="merch/data/{{ user.id }}/{{ store.id }}" class="btn btn-primary">View data</a>
               </div>
             </div>
-
-                 {% endfor %}
+             {% endfor %}
              {% else %}
                  <p>No stores are available.</p>
              {% endif %}

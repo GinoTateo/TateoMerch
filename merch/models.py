@@ -36,6 +36,7 @@ KSIZE = (
 
 STORE = (
     ('Safeway', 'Safeway'),
+    ('Target', 'Target'),
     ('Lucky', 'Lucky'),
     ('FoodMaxx', 'FoodMaxx'),
     ('SaveMart', 'SaveMart'),

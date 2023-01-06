@@ -14,19 +14,20 @@
   {% extends 'navbar.html' %}
   {% block content %}
 
+      {% if store %}
 
       <div class="card">
               <div class="card-body">
-                <h4 class="card-title">{{ merch.store }}</h4>
+                <h4 class="card-title">{{ store.name }} {{ store.number }}</h4>
                 <h6>{{ merch.date }}</h6>
                 <br>
-                <h6>Cases worked: {{ merch.case_count }}</h6>
-                  <h6>Out of stocks: {{ merch.OOS.count }}</h6>
                     <div>
                         <h6>
                         <br>
-                          {% for item in merch.OOS.all %}
+                          {% for item in merch %}
                               <p>{{ forloop.counter }}. {{ item.item_name }}
+                              {{ item.date }}
+                              <a href="/merch/{{ item.id }}" class="btn btn-primary">View merch</a>
                           {% empty %}
                               No out of stocks
                           {% endfor %}
@@ -35,5 +36,5 @@
 {#                <img src= "{{ merch.upload.url }}" alt="{{ merch.store }}" width="300" height="500">#}
               </div>
       </div>
-
+{% endif %}
 {% endblock content %}

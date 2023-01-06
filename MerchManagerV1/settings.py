@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', default='your secret key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['127.0.0.1','tateomerch.onrender.com','TateoMerch.com','192.168.4.96']
 
@@ -126,10 +126,17 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = os.path.join(BASE_DIR, '/var/disk/')
 
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+#Email settings
+EMAIL_HOST = os.environ.get('EMAIL_HOST', default='HOST')
+EMAIL_PORT = os.environ.get('EMAIL_PORT', default='PORT')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', default='USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', default='PASSWORD')
+EMAIL_USE_TLS = True

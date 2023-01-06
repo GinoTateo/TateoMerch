@@ -27,11 +27,15 @@ urlpatterns = [
     # Merch
     path('<int:merch_id>/', views.detail, name='detail'),
     path('<merchuser>/', views.merchuser, name='merch-user'),
+    #path('data', views.merchuser, name='merch-user'),
 
     # Route
     path('route-review', views.RouteReview, name='route-review'),
     path('order-summary', views.OrderSummaryView, name='order-summary'),
-    path('route-review/data/<store_name>/<int:store_number>', views.StoreData, name='order-summary-data'),
+    path('/data/<int:user_id>/<int:store_id>', views.StoreData, name='order-summary-data'),
+
+    # Reports
+    path('send', views.send_email, name='send-email'),
 
     # Cart
     path('add-to-cart/<pk>/', add_to_cart, name='add-to-cart'),

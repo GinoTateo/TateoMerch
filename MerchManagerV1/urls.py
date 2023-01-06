@@ -45,6 +45,7 @@ urlpatterns = [
 
     #
     path('route-review', views.RouteReview, name='route-review'),
+    path('merch/data/<int:user_id>/<int:store_id>', views.StoreData, name='order-summary-data'),
 
     # url(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
     # url(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),

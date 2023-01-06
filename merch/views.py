@@ -5,13 +5,14 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect, BadHeaderError
 from django.shortcuts import get_object_or_404, render, redirect
 from django.template.context_processors import request
 from django.urls import resolve
 from django.utils import timezone
 from django.views import View
 from django.views.generic import DetailView, ListView
+from django.core.mail import send_mail
 
 from .forms import StoreForm, MerchForm, WeeklyDataForm, StoreForm2, ItemForm
 from .models import Merch, WeeklyData, Order, Item, OrderItem, Store
@@ -37,7 +38,7 @@ def detail(request, merch_id):
     merch = get_object_or_404(Merch, pk=merch_id)
     return render(request, 'detail.html', {'merch': merch})
 
-
+@login_required
 def home(request):
     latest_list = WeeklyData.objects.order_by('-date')[:5]
     template = loader.get_template('home.html')
@@ -58,7 +59,7 @@ def loginrequest(request):
             if user is not None:
                 login(request, user)
                 messages.info(request, f"You are now logged in as {username}.")
-                return redirect("home")
+                return redirect("route-review")
             else:
                 messages.error(request, "Invalid username or password.")
         else:
@@ -180,7 +181,11 @@ def OrderSummaryView(request):
 @login_required
 def RouteReview(request):
         user = User.objects.get(username=request.user)
-        rtmd = Store.objects.filter(RSRrt=user.username)
+        if (request.user.is_superuser):
+            rtmd = Store.objects.all()
+        else:
+            rtmd = Store.objects.filter(RSRrt=user.username)
+
         context = {
             'list' : rtmd
         }
@@ -188,14 +193,15 @@ def RouteReview(request):
         return render(request, 'route-review.html', context)
 
 @login_required
-def StoreData(request, storeid):
+def StoreData(request, user_id, store_id):
         user = User.objects.get(username=request.user)
         rtmd = Store.objects.filter(RSRrt=user.username)
-        context = {
-            'list' : rtmd
-        }
+        routeData = get_object_or_404(rtmd, pk=store_id)
+        md = Merch.objects.filter(store=routeData)
+        return render(request, 'route-review-data.html', {'store': routeData,
+                                                          'merch': md,
+                                                        })
 
-        return render(request, 'route-review.html', context)
 
 # class OrderSummaryView(LoginRequiredMixin, View):
 #     def get(self, *args, **kwargs):
@@ -304,3 +310,19 @@ def reduce_quantity_item(request, pk):
 class orderForm(ListView):
     model = Item
     template_name = "order_form.html"
+
+@login_required
+def send_email(request):
+    subject = request.POST.get('subject', 'Test')
+    message = request.POST.get('message', 'Test')
+    from_email = request.POST.get('from_email', 'Tateomerch@gmail.com')
+    if subject and message and from_email:
+        try:
+            send_mail(subject, message, from_email, ['TateoGino@gmail.com'])
+        except BadHeaderError:
+            return HttpResponse('Invalid header found.')
+        return HttpResponseRedirect('home')
+    else:
+        # In reality we'd use a form class
+        # to get proper validation errors.
+        return HttpResponse('Make sure all fields are entered and valid.')
