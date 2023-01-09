@@ -90,18 +90,37 @@ class OrderItem(models.Model):
             return self.quantity
         return self.quantity
 
+class WeeklyData(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    date = models.DateField()
+    #merch = models.ManyToManyField(Merch, blank=True)
+    TotalStores = models.IntegerField(max_length=100)
+    TotalCases = models.IntegerField(max_length=100)
+    complete = models.BooleanField(default=False)
+    def __str__(self):
+        return f'{self.user} {self.date}'
+
 class Merch(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     store = models.ForeignKey('Store', on_delete=models.CASCADE, default="Safeway")
-    OOS = models.ManyToManyField(Item, blank=True)
-    case_count = models.IntegerField(max_length=2, default=0)
+    OOS = models.ManyToManyField(Item, blank=True, related_name='OOS')
+    worked_cases = models.ManyToManyField(Item, blank=True, related_name='worked_cases')
     date = models.DateTimeField(auto_now_add=True)
     upload = models.ImageField(upload_to='images', default="N/A")
+    Week = models.OneToOneField(
+        WeeklyData,
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE
+    )
     def __str__(self):
         return f'{self.store} |  {self.date}'
 
     def get_num_OOS(self):
             return self.OOS.count()
+
+    def get_num_cases_worked(self):
+            return self.worked_cases.count()
 
 class Store(models.Model):
     name = models.CharField(default= "Safeway", choices=STORE, max_length=25)
@@ -114,14 +133,6 @@ class Store(models.Model):
     BS_Location = models.CharField(default= "", max_length=50)
     def __str__(self):
         return f'{self.name} {self.number}'
-
-class WeeklyData(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    date = models.DateField()
-    TotalStores = models.IntegerField(max_length=100)
-    TotalCases = models.IntegerField(max_length=100)
-    def __str__(self):
-        return f'{self.user} {self.date}'
 
 class Order(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

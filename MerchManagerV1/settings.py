@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', default='your secret key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.0.1','tateomerch.onrender.com','TateoMerch.com','192.168.4.96']
 
@@ -135,8 +135,16 @@ MEDIA_ROOT = os.path.join(BASE_DIR, '/var/disk/')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 #Email settings
-EMAIL_HOST = os.environ.get('EMAIL_HOST', default='HOST')
-EMAIL_PORT = os.environ.get('EMAIL_PORT', default='PORT')
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', default='USER')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', default='PASSWORD')
+# EMAIL_HOST = os.environ.get('EMAIL_HOST', default='HOST')
+# EMAIL_PORT = os.environ.get('EMAIL_PORT', default='PORT')
+# EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', default='USER')
+# EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', default='PASSWORD')
+# EMAIL_USE_TLS = True
+
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = '587'
+EMAIL_HOST_USER = 'Tateomerch@gmail.com'
+EMAIL_HOST_PASSWORD = 'htcyqdwdvtntdncc'
 EMAIL_USE_TLS = True
+#EMAIL_USE_SSL = True
+#EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

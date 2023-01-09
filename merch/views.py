@@ -39,14 +39,19 @@ def detail(request, merch_id):
     return render(request, 'detail.html', {'merch': merch})
 
 @login_required
-def home(request):
+def weekly(request):
     latest_list = WeeklyData.objects.order_by('-date')[:5]
-    template = loader.get_template('home.html')
+    template = loader.get_template('weekly.html')
     context = {
         'latest_list': latest_list,
     }
     return HttpResponse(template.render(context, request))
 
+def home(request):
+    return render(request, 'home.html')
+
+def dashboard(request):
+    return render(request, 'merch-dashboard.html')
 
 def loginrequest(request):
     if request.method == "POST":

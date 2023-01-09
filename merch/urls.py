@@ -27,6 +27,8 @@ urlpatterns = [
     # Merch
     path('<int:merch_id>/', views.detail, name='detail'),
     path('<merchuser>/', views.merchuser, name='merch-user'),
+    path('weekly', views.weekly, name='weekly-data'),
+    path('dashboard', views.dashboard, name='dashboard'),
     #path('data', views.merchuser, name='merch-user'),
 
     # Route
