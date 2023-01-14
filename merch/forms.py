@@ -1,4 +1,7 @@
 from django import forms
+from django.forms import ModelForm
+
+from . import models
 from .models import Store, Merch, WeeklyData, User, Item
 
 
@@ -13,9 +16,14 @@ class ItemForm(forms.ModelForm):
      fields = '__all__'
 
 class MerchForm(forms.ModelForm):
-   class Meta:
-     model = Merch
-     fields = '__all__'
+    class Meta:
+        model = Merch
+        fields = ['OOS', 'worked_cases', 'upload', 'store', 'user']
+
+    def __init__(self, *args, **kwargs):
+        super(MerchForm, self).__init__(*args, **kwargs)
+        self.fields['OOS'].required = False
+        self.fields['worked_cases'].required = False
 
 class WeeklyDataForm(forms.ModelForm):
     class Meta:
@@ -26,13 +34,14 @@ class StoreForm2(forms.Form):
     store = forms.CharField(max_length=100)
     number = forms.IntegerField()
 
-class MerchForm2(forms.ModelForm):
-   class Meta:
-       user = forms.ModelChoiceField(queryset=User.objects.all())
-       store = forms.ModelChoiceField(queryset=Store.objects)
-       OOS = forms.IntegerField()
-       case_count = forms.IntegerField()
-       upload = forms.ImageField()
+class MerchForm2(ModelForm):
+    OOS = forms.ModelChoiceField(queryset=Item.objects.all())
+    worked_cases = forms.ModelChoiceField(queryset=Item.objects.all())
+    upload = forms.ImageField()
+    class Meta:
+            model = Merch
+            fields = ['OOS','worked_cases','upload']
+
 
 
 

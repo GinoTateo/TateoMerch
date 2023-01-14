@@ -10,27 +10,47 @@
 
     <title>TateoMerch</title>
   </head>
-    <body>
+
+  <style>
+
+      .grad {
+    background-image: linear-gradient(#FDB99B,#CF8BF3,#A770EF); /*#2657eb*/
+          background-repeat: no-repeat;
+  min-height: 1000px;
+}
+
+.blank_row {
+    height: 700px; /* overwrites any other rules */
+    background-color: #FFFFFF;
+}
+
+  </style>
+
+    <body class="grad">
         {% extends 'navbar.html' %}
          {% block content %}
              {% if latest_list %}
+
+                 <div style="display: flex; flex-direction: row; flex-wrap: wrap">
+
                  {% for merch in latest_list %}
+            <br>
 
-            <div class="card">
+            <div class="card" style="width: 22rem; margin: 10px">
+            <div class="card-header">{{ merch.store }}</div>
               <div class="card-body">
-                <h5 class="card-title">{{ merch.store }}</h5>
 
-                                <ul>
                                 <h6>{{ merch.date }}</h6>
                                 <h6> Out of Stocks: {{ merch.OOS.count }} </h6>
                                 <h6>Case Count: {{ merch.case_count }}</h6>
-                                </ul>
 
                 <a href="/merch/{{ merch.id }}" class="btn btn-primary">View more</a>
               </div>
             </div>
 
                  {% endfor %}
+
+                 </div>
              {% else %}
                  <p>No merch are available.</p>
              {% endif %}

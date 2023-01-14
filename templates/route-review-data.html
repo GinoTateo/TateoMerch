@@ -10,15 +10,64 @@
 
     <title>TateoMerch</title>
   </head>
+  <style>
 
+      .grad {
+    background-image: linear-gradient(#FDB99B,#CF8BF3,#A770EF); /*#2657eb*/
+          background-repeat: no-repeat;
+  min-height: 1000px;
+}
+
+.blank_row {
+    height: 700px; /* overwrites any other rules */
+    background-color: #FFFFFF;
+}
+
+  </style>
+  <body class="grad">
   {% extends 'navbar.html' %}
   {% block content %}
 
       {% if store %}
-
-      <div class="card">
+<div style="display: flex; flex-direction: row; flex-wrap: wrap">
+            <div class="card" style="width: 29rem; margin: 10px">
               <div class="card-body">
                 <h4 class="card-title">{{ store.name }} {{ store.number }}</h4>
+                <br>
+                    <div>
+                        <h6>Address: </h6>
+                        <p>{{ store.Address }}, {{ store.City }}</p>
+                        <h6> Route: </h6>
+                        <p>{{ store.RSRrt }}</p>
+                    </div>
+{#                <img src= "{{ merch.upload.url }}" alt="{{ merch.store }}" width="300" height="500">#}
+              </div>
+            </div>
+
+                <div class="card" style="width: 29rem; margin: 10px">
+              <div class="card-body">
+                <h4 class="card-title">Store Details</h4>
+                <h6>{{ merch.date }}</h6>
+                <br>
+                    <div>
+                        <h6> Backstock: </h6>
+                        <p>{{ store.BS_Location }}</p>
+                        <h6> Receiver: </h6>
+                        <p>{{ store.receiver_name }}</p>
+                        <h6> Receiving hours: </h6>
+                        <p>{{ store.receiver_open }} - {{ store.receiver_close }}</p>
+                        <h6> Receiving type: </h6>
+                        <p>{{ store.receive_type}}</p>
+                        <h6> Weekly average: </h6>
+                        <p>${{ store.weekly_average}}</p>
+                    </div>
+{#                <img src= "{{ merch.upload.url }}" alt="{{ merch.store }}" width="300" height="500">#}
+              </div>
+            </div>
+
+            <div class="card" style="width: 29rem; margin: 10px">
+              <div class="card-body">
+                <h4 class="card-title">Merchandising</h4>
                 <h6>{{ merch.date }}</h6>
                 <br>
                     <div>
@@ -29,12 +78,58 @@
                               {{ item.date }}
                               <a href="/merch/{{ item.id }}" class="btn btn-primary">View merch</a>
                           {% empty %}
-                              No out of stocks
+                              No data
                           {% endfor %}
                         </h6>
                     </div>
 {#                <img src= "{{ merch.upload.url }}" alt="{{ merch.store }}" width="300" height="500">#}
               </div>
-      </div>
+            </div>
+
+            <div class="card" style="width: 29rem; margin: 10px">
+              <div class="card-body">
+                <h4 class="card-title">Service Schedule</h4>
+                <h6>{{ merch.date }}</h6>
+                <br>
+                    <div>
+                        <h6>
+                        <br>
+                        {{ store.Service_days }}
+                          {% for service_schedule in service %}
+                              <p>{{ forloop.counter }}. {{ item.item_name }}
+                              {{ item.date }}
+                              <a href="/merch/{{ item.id }}" class="btn btn-primary">View merch</a>
+                          {% empty %}
+                              No service
+                          {% endfor %}
+                        </h6>
+                    </div>
+{#                <img src= "{{ merch.upload.url }}" alt="{{ merch.store }}" width="300" height="500">#}
+              </div>
+            </div>
+
+            <div class="card" style="width: 29rem; margin: 10px">
+              <div class="card-body">
+                <h4 class="card-title">Displays</h4>
+                <h6>{{ merch.date }}</h6>
+                <br>
+                    <div>
+                        <h6>
+                        <br>
+
+                        {{ store.displays.location }}
+                          {% for display in store.displays.all %}
+                              {{ display }}
+                          {% empty %}
+                              No displays
+                          {% endfor %}
+                        </h6>
+                    </div>
+{#                <img src= "{{ merch.upload.url }}" alt="{{ merch.store }}" width="300" height="500">#}
+              </div>
+            </div>
+</div>
 {% endif %}
 {% endblock content %}
+</body>
+</html>

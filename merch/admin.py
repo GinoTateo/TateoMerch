@@ -1,7 +1,7 @@
 import datetime
 from django.utils.datetime_safe import datetime
 from django.contrib import admin
-from .models import Merch, Store, WeeklyData, Item, Order, OrderItem
+from .models import Merch, Store, WeeklyData, Item, Order, OrderItem, Display
 
 
 class EntryAdmin(admin.ModelAdmin):
@@ -19,3 +19,5 @@ admin.site.register(WeeklyData)
 admin.site.register(Item)
 admin.site.register(Order)
 admin.site.register(OrderItem)
+#admin.site.register(ServiceDay)
+admin.site.register(Display)

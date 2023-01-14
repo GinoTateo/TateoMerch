@@ -14,8 +14,8 @@ from django.views import View
 from django.views.generic import DetailView, ListView
 from django.core.mail import send_mail
 
-from .forms import StoreForm, MerchForm, WeeklyDataForm, StoreForm2, ItemForm
-from .models import Merch, WeeklyData, Order, Item, OrderItem, Store
+from .forms import StoreForm, MerchForm, WeeklyDataForm, StoreForm2, ItemForm, MerchForm2
+from .models import Merch, WeeklyData, Order, Item, OrderItem, Store, Display
 from django.template import loader
 from django.contrib import messages
 
@@ -50,14 +50,28 @@ def weekly(request):
 def home(request):
     return render(request, 'home.html')
 
+@login_required(login_url='login')
 def dashboard(request):
-    return render(request, 'merch-dashboard.html')
+    #user = get_object_or_404(User, username=merchuser)
+    latest_list = WeeklyData.objects.order_by('-date')[:5]
+    template = loader.get_template('merch-dashboard.html')
+    user = User.objects.get(username=request.user)
+    if (request.user.is_superuser):
+        rtmd = Store.objects.all()
+    else:
+        rtmd = Store.objects.filter(RSRrt=user.username)
+
+    context = {
+        'weekly': latest_list,
+        'stores': rtmd,
+        'requests': rtmd,
+    }
+    return HttpResponse(template.render(context, request))
 
 def loginrequest(request):
     if request.method == "POST":
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
-            print("username")
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
             user = authenticate(username=username, password=password)
@@ -76,6 +90,7 @@ def logout_view(request):
     logout(request)
     return render(request, 'home.html')
 
+@login_required(login_url='login')
 def merchuser(request, merchuser):
     user = get_object_or_404(User, username=merchuser)
     profile = User.objects.get(username=user)
@@ -200,11 +215,18 @@ def RouteReview(request):
 @login_required
 def StoreData(request, user_id, store_id):
         user = User.objects.get(username=request.user)
-        rtmd = Store.objects.filter(RSRrt=user.username)
+        if (request.user.is_superuser):
+            rtmd = Store.objects.all()
+        else:
+            rtmd = Store.objects.filter(RSRrt=user.username)
+            #storedisplay = Store.displays.objects.filter(RSRrt=user.username)
+
         routeData = get_object_or_404(rtmd, pk=store_id)
         md = Merch.objects.filter(store=routeData)
+        #displays = Merch.objects.filter(store=routeData)
         return render(request, 'route-review-data.html', {'store': routeData,
                                                           'merch': md,
+                                                          #'display': displays
                                                         })
 
 
@@ -328,6 +350,26 @@ def send_email(request):
             return HttpResponse('Invalid header found.')
         return HttpResponseRedirect('home')
     else:
-        # In reality we'd use a form class
-        # to get proper validation errors.
         return HttpResponse('Make sure all fields are entered and valid.')
+
+@login_required
+def create_merch(request, storeid):
+    current_store = get_object_or_404(Store, pk=storeid)
+    current_user = request.user
+
+    if request.method == 'POST':
+        form = MerchForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('/merch/dashboard')
+        else:
+            print(form.errors)
+
+    else:
+        form = MerchForm(initial={"user":  current_user, "store": current_store})
+
+    return render(request,
+                  'create-merch.html',
+                  {'form': form,
+                   'store': current_store
+                   })

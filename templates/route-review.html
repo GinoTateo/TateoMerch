@@ -10,26 +10,41 @@
 
     <title>TateoMerch</title>
   </head>
-    <body>
+
+    <style>
+      .grad {
+    background-image: linear-gradient(#FDB99B,#CF8BF3,#A770EF); /*#2657eb*/
+          background-repeat: no-repeat;
+  min-height: 1000px;
+}
+
+.blank_row {
+    height: 700px; /* overwrites any other rules */
+    background-color: #FFFFFF;
+}
+  </style>
+    <body class="grad">
         {% extends 'navbar.html' %}
          {% block content %}
              {% if list %}
+                 <div style="display: flex; flex-direction: row; flex-wrap: wrap">
                  {% for store in list %}
 
-            <div class="card">
+            <div class="card " style="width: 22rem; margin: 10px">
+            <div class="card-header">{{ store.name }} {{ store.number }}</div>
               <div class="card-body">
-                <h5 class="card-title">{{ store.name }} {{ store.number }}</h5>
 
-                                <ul>
-                                    <h6>{{ store.Address }}, {{ store.City }}</h6>
-                                    <h6>{{ store.Area }}</h6>
-                                    <h6>{{ store.BS_Location }}</h6>
-                                </ul>
+
+                                    <p>{{ store.Address }}, {{ store.City }}</p>
+                                    <p>{{ store.BS_Location }}</p>
+                                    <p>{{ store.Area }}</p>
+
 
                 <a href="merch/data/{{ user.id }}/{{ store.id }}" class="btn btn-primary">View data</a>
               </div>
             </div>
              {% endfor %}
+                 </div>
              {% else %}
                  <p>No stores are available.</p>
              {% endif %}

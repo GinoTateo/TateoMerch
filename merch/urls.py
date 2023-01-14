@@ -29,7 +29,8 @@ urlpatterns = [
     path('<merchuser>/', views.merchuser, name='merch-user'),
     path('weekly', views.weekly, name='weekly-data'),
     path('dashboard', views.dashboard, name='dashboard'),
-    #path('data', views.merchuser, name='merch-user'),
+    path('create-merch/<storeid>', views.create_merch, name='create-merch'),
+    #path('data', views.merchuser, name='merch-user'), /<storeid>
 
     # Route
     path('route-review', views.RouteReview, name='route-review'),
