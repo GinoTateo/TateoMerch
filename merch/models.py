@@ -184,7 +184,7 @@ class Store(models.Model):
     weekly_average = models.IntegerField(default=0, max_length=100)
     Address = models.CharField(default= "", max_length=50)
     BS_Location = models.CharField(default= "", max_length=50)
-    displays = models.ManyToManyField(Display)
+    displays = models.ManyToManyField(Display, blank=True, null=True, related_name='Display')
     def __str__(self):
         return f'{self.name} {self.number}'
 
@@ -203,3 +203,5 @@ class Order(models.Model):
         for order_item in self.items.all():
             total += order_item.quantity
         return total
+
+

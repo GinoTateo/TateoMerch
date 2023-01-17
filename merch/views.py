@@ -1,3 +1,4 @@
+import datetime
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -8,10 +9,12 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, HttpResponseRedirect, BadHeaderError
 from django.shortcuts import get_object_or_404, render, redirect
 from django.template.context_processors import request
+from django.template.loader import render_to_string
 from django.urls import resolve
 from django.utils import timezone
+from django.utils.html import strip_tags
 from django.views import View
-from django.views.generic import DetailView, ListView
+from django.views.generic import ListView, DetailView
 from django.core.mail import send_mail
 
 from .forms import StoreForm, MerchForm, WeeklyDataForm, StoreForm2, ItemForm, MerchForm2
@@ -222,10 +225,27 @@ def StoreData(request, user_id, store_id):
             #storedisplay = Store.displays.objects.filter(RSRrt=user.username)
 
         routeData = get_object_or_404(rtmd, pk=store_id)
-        md = Merch.objects.filter(store=routeData)
+        md = Merch.objects.filter(store=routeData).order_by('-date')[:5]
         #displays = Merch.objects.filter(store=routeData)
         return render(request, 'route-review-data.html', {'store': routeData,
                                                           'merch': md,
+                                                          #'display': displays
+                                                        })
+
+@login_required
+def SpecificStoreMerch(request, user_id, store_id):
+        user = User.objects.get(username=request.user)
+        if (request.user.is_superuser):
+            rtmd = Store.objects.all()
+        else:
+            rtmd = Store.objects.filter(RSRrt=user.username)
+            #storedisplay = Store.displays.objects.filter(RSRrt=user.username)
+
+        routeData = get_object_or_404(rtmd, pk=store_id)
+        md = Merch.objects.filter(store=routeData).order_by('-date')
+        #displays = Merch.objects.filter(store=routeData)
+        return render(request, 'index.html', {'store': routeData,
+                                                          'latest_list': md,
                                                           #'display': displays
                                                         })
 
@@ -340,8 +360,20 @@ class orderForm(ListView):
 
 @login_required
 def send_email(request):
-    subject = request.POST.get('subject', 'Test')
-    message = request.POST.get('message', 'Test')
+    today = datetime.datetime.now()
+    # fivedays = datetime.timedelta(days=5)
+    # dayrange = today - fivedays
+
+    enddate = today - datetime.timedelta(days=5)
+
+    latest_list = Merch.objects.filter(date__range=[enddate, today],store__RSRrt='731')
+    # latest_list.filter(date__range=[today, fivedays])
+
+    html_message = render_to_string('email_template.html', {'latest_list': latest_list})
+    plain_message = strip_tags(html_message)
+
+    subject = request.POST.get('subject', 'Merch ')
+    message = request.POST.get('message', plain_message)
     from_email = request.POST.get('from_email', 'Tateomerch@gmail.com')
     if subject and message and from_email:
         try:

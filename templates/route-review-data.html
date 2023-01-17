@@ -12,7 +12,7 @@
   </head>
   <style>
 
-      .grad {
+.grad {
     background-image: linear-gradient(#FDB99B,#CF8BF3,#A770EF); /*#2657eb*/
           background-repeat: no-repeat;
   min-height: 1000px;
@@ -81,6 +81,7 @@
                               No data
                           {% endfor %}
                         </h6>
+                    <a href="/merch/store/{{ user.id }}/{{ store.id}}" class="btn btn-primary">View More</a>
                     </div>
 {#                <img src= "{{ merch.upload.url }}" alt="{{ merch.store }}" width="300" height="500">#}
               </div>

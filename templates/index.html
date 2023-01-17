@@ -19,6 +19,10 @@
   min-height: 1000px;
 }
 
+            .grad-button {
+    background-image: linear-gradient(#FDB99B,#CF8BF3,#A770EF); /*#2657eb*/
+}
+
 .blank_row {
     height: 700px; /* overwrites any other rules */
     background-color: #FFFFFF;
@@ -37,14 +41,17 @@
             <br>
 
             <div class="card" style="width: 22rem; margin: 10px">
-            <div class="card-header">{{ merch.store }}</div>
+            <div class="card-header">Merch</div>
               <div class="card-body">
+                    <h5 class="card-title">{{ merch.store }}</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">{{ merch.date }}</h6>
 
-                                <h6>{{ merch.date }}</h6>
-                                <h6> Out of Stocks: {{ merch.OOS.count }} </h6>
-                                <h6>Case Count: {{ merch.case_count }}</h6>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">Out of Stocks: {{ merch.OOS.count }}</li>
+                         <li class="list-group-item">Case Count: {{ merch.worked_cases.count }}</li>
+                    </ul>
 
-                <a href="/merch/{{ merch.id }}" class="btn btn-primary">View more</a>
+                     <a href="/merch/{{ merch.id }}" class="btn btn-outline-primary ">View more</a>
               </div>
             </div>
 

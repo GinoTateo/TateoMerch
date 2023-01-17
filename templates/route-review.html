@@ -31,16 +31,12 @@
                  {% for store in list %}
 
             <div class="card " style="width: 22rem; margin: 10px">
-            <div class="card-header">{{ store.name }} {{ store.number }}</div>
+            <div class="card-header">RSR Route #{{ store.RSRrt }}</div>
               <div class="card-body">
+                <h5 class="card-title">{{ store.name }}{% if store.number %} #{{ store.number }} {% endif %}</h5>
+                  <h6 class="card-subtitle mb-2 text-muted">{{ store.Address }}, {{ store.City }}</h6>
 
-
-                                    <p>{{ store.Address }}, {{ store.City }}</p>
-                                    <p>{{ store.BS_Location }}</p>
-                                    <p>{{ store.Area }}</p>
-
-
-                <a href="merch/data/{{ user.id }}/{{ store.id }}" class="btn btn-primary">View data</a>
+                <a href="merch/data/{{ user.id }}/{{ store.id }}" class="btn btn-outline-primary">View data</a>
               </div>
             </div>
              {% endfor %}

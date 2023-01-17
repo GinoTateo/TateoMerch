@@ -11,29 +11,57 @@
     <title>TateoMerch</title>
   </head>
 
+  <style>
+
+      .grad {
+    background-image: linear-gradient(#FDB99B,#CF8BF3,#A770EF); /*#2657eb*/
+          background-repeat: no-repeat;
+  min-height: 1000px;
+}
+
+            .grad-button {
+    background-image: linear-gradient(#FDB99B,#CF8BF3,#A770EF); /*#2657eb*/
+}
+
+.blank_row {
+    height: 700px; /* overwrites any other rules */
+    background-color: #FFFFFF;
+}
+
+  </style>
+  <body class="grad">
   {% extends 'navbar.html' %}
   {% block content %}
 
 
-      <div class="card">
-              <div class="card-body">
-                <h4 class="card-title">{{ merch.store }}</h4>
-                <h6>{{ merch.date }}</h6>
-                <br>
-                <h6>Cases worked: {{ merch.case_count }}</h6>
-                  <h6>Out of stocks: {{ merch.OOS.count }}</h6>
-                    <div>
-                        <h6>
-                        <br>
-                          {% for item in merch.OOS.all %}
-                              <p>{{ forloop.counter }}. {{ item.item_name }}
-                          {% empty %}
-                              No out of stocks
-                          {% endfor %}
-                        </h6>
-                    </div>
-                <img src= "{{ merch.upload.url }}" alt="{{ merch.store }}" width="300" height="500">
-              </div>
-      </div>
+      <div class="card" style="width: device-width; margin: 10px">
 
+
+
+<div class="card-body">
+    <h4 class="card-title">{{ merch.store }}</h4>
+        <h6 class="card-subtitle mb-2 text-muted">{{ merch.date }}</h6>
+
+{% if merch.OOS > 0 %}
+    <div class="card" style="width: 18rem; margin: 20px">
+        <div class="card-header">
+            <h6> Out of Stock </h6>
+        </div>
+    {% for item in merch.OOS.all %}
+
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">{{ item.item_brand }}{{ item.item_type }}{{ item.item_size }} {{ item.item_name }}</li>
+        </ul>
+
+                          {% empty %}
+        <li class="list-group-item">No out of stocks</li>
+                          {% endfor %}
+    </div>
+{% endif %}
+    <p class="card-text"><small class="text-muted">Merchandiser: {{ merch.user}}</small></p>
+  </div>
+{#  <img src="{{ merch.upload.url }}" class="card-img-bottom" alt="{{ merch.store }} image unavailable">#}
+      </div>
 {% endblock content %}
+</body>
+</html>
