@@ -13,6 +13,7 @@
 
     <body class="grad">
         {% extends 'merch/dashboard_nav.html' %}
+
          {% block content %}
              {% if merch_requests %}
                  <div style="display: flex; flex-direction: row; flex-wrap: wrap">
@@ -50,10 +51,10 @@
                 {% endif %}
             }
 </style>
+{% load static %}
+<script src="{% static 'Scripts/jquery-3.6.3.min.js' %}"></script>
 
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 <script type="text/javascript">
-
 	function onMerchRequestAccepted(){
 		location.reload();
 	}

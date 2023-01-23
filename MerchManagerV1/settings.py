@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', default='your secret key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.0.1', 'tateomerch.onrender.com', 'TateoMerch.com', '192.168.4.96']
 
@@ -125,23 +125,26 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 
-USE_S3 = os.getenv('USE_S3') == 'TRUE'
+# USE_S3 = os.getenv('USE_S3') == 'TRUE'
+#
+# if USE_S3:
+#     # aws settings
+#     AWS_ACCESS_KEY_ID = '1b123e3694b54e3546095d70184c983afc5200cd5692e078f3f63daaec51af95'
+#     AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+#     AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
+#     AWS_DEFAULT_ACL = 'public-read'
+#     AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+#     AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
+#     # s3 static settings
+#     AWS_LOCATION = 'static'
+#     STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/'
+#     STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+# else:
 
-if USE_S3:
-    # aws settings
-    AWS_ACCESS_KEY_ID = '1b123e3694b54e3546095d70184c983afc5200cd5692e078f3f63daaec51af95'
-    AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-    AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
-    AWS_DEFAULT_ACL = 'public-read'
-    AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
-    AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
-    # s3 static settings
-    AWS_LOCATION = 'static'
-    STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/'
-    STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-else:
-    STATIC_URL = '/static/'
-    STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
 
 # STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
 
