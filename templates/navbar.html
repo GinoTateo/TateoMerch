@@ -14,30 +14,22 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.min.js" integrity="sha384-cuYeSxntonz0PPNlHhBs68uyIAVpIIOZZ5JqeqvYYIcEL727kskC66kF92t6Xl2V" crossorigin="anonymous"></script>
     <title>TateoMerch</title>
   </head>
-
-  <style>
-    .grad {
-    background-image: linear-gradient(#FDB99B,#CF8BF3,#A770EF); /*#2657eb*/
-    }
-    .blank_row {
-    height: 700px; /* overwrites any other rules */
-    background-color: #FFFFFF;
-    }
-
-  </style>
     <nav class="navbar navbar-expand navbar-light bg-light">
         <div class="container-fluid">
           <a class="navbar-brand" href="/home" style="
-           background: linear-gradient(to right, #FDB99B,#CF8BF3,#A770EF);
+           background: linear-gradient(to right, #659999,#f4791f);
             -webkit-text-fill-color: transparent;
             -webkit-background-clip: text;
                 ">TateoMerch</a>
           <div class=" navbar-collapse" id="navbarNavAltMarkup" >
             <div class="navbar-nav">
+                {% if user.is_merch %}
               <a class="nav-link" href="/merch/dashboard">Merch</a>
-              <a class="nav-link" href="/route-review">Route</a>
-{#              <a class="nav-link" href="/merch/orderform">Order Form</a>#}
-{#              <a class="nav-link" href="/merch/order-summary">Order Summary</a>#}
+                {% endif %}
+            {% if user.is_rsr %}
+              <a class="nav-link" href="/rsr/route-review">Route</a>
+{#              <a class="nav-link" href="/rsr/orderform">Order</a>#}
+            {% endif %}
             </div>
           </div>
 
@@ -47,7 +39,7 @@
                     Account
             </button>
             <div class="dropdown-menu dropdown-menu-end">
-                <a class="dropdown-item" href="/account">Settings</a>
+                <a class="dropdown-item" href="{% url 'account:view' user_id=user.id %}">Settings</a>
                 <div class="dropdown-divider"></div>
                 <a class="dropdown-item" href="/logout">Logout</a>
             </div>
@@ -59,11 +51,11 @@
                             Account
                     </button>
                 <div class="dropdown-menu dropdown-menu-end">
-                    <a class="dropdown-item" href="{% url 'login' %}">
+                    <a class="dropdown-item" href="{% url 'account:login' %}">
                         Login
                     </a>
                     <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="{% url 'register' %}">
+                    <a class="dropdown-item" href="{% url 'account:register' %}">
                         Register
                     </a>
                 </div>

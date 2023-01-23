@@ -1,64 +1,60 @@
 import datetime
+import json
 
-from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.models import User
-from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, HttpResponseRedirect, BadHeaderError
 from django.shortcuts import get_object_or_404, render, redirect
-from django.template.context_processors import request
 from django.template.loader import render_to_string
 from django.urls import resolve
-from django.utils import timezone
 from django.utils.html import strip_tags
-from django.views import View
-from django.views.generic import ListView, DetailView
 from django.core.mail import send_mail
 
-from .forms import StoreForm, MerchForm, WeeklyDataForm, StoreForm2, ItemForm, MerchForm2
-from .models import Merch, WeeklyData, Order, Item, OrderItem, Store, Display
+from account.models import Account
+from operations.models import Item
+from rsr.models import Store
+from .models import Merch, Request, Docket
 from django.template import loader
-from django.contrib import messages
-
 
 @login_required(login_url='login')
 def index(request):
     latest_list = Merch.objects.order_by('-date')[:25]
-    template = loader.get_template('index.html')
+    template = loader.get_template('merch/index.html')
     context = {
-        'latest_list': latest_list,
+        'latest_list': latest_list
     }
     return HttpResponse(template.render(context, request))
 
-class ProductView(DetailView):
-    model = Item
-    template_name = "order_page.html"
+@login_required(login_url='login')
+def docket(request, user_id):
+    my_dockets = Docket.objects.order_by('-date')[:25]
+    # dockets_list = my_dockets.order_by('-date')[:5]
+    template = loader.get_template('merch/docket.html')
+    context = {
+        'list': my_dockets,
+    }
+    return HttpResponse(template.render(context, request))
 
 @login_required(login_url='login')
 def detail(request, merch_id):
     merch = get_object_or_404(Merch, pk=merch_id)
-    return render(request, 'detail.html', {'merch': merch})
+    return render(request, 'merch/detail.html', {'merch': merch})
 
-@login_required
-def weekly(request):
-    latest_list = WeeklyData.objects.order_by('-date')[:5]
-    template = loader.get_template('weekly.html')
-    context = {
-        'latest_list': latest_list,
-    }
-    return HttpResponse(template.render(context, request))
+# @login_required
+# def weekly(request):
+#     latest_list = WeeklyData.objects.order_by('-date')[:5]
+#     template = loader.get_template('weekly_view.html')
+#     context = {
+#         'latest_list': latest_list,
+#     }
+#     return HttpResponse(template.render(context, request))
 
-def home(request):
-    return render(request, 'home.html')
 
 @login_required(login_url='login')
 def dashboard(request):
-    #user = get_object_or_404(User, username=merchuser)
-    latest_list = WeeklyData.objects.order_by('-date')[:5]
-    template = loader.get_template('merch-dashboard.html')
-    user = User.objects.get(username=request.user)
+    #user = get_object_or_404(Account, username=merchuser)
+    latest_list = Merch.objects.order_by('-date')[:5]
+    template = loader.get_template('merch/merchandiser_dashboard_view.html')
+    user = Account.objects.get(username=request.user)
     if (request.user.is_superuser):
         rtmd = Store.objects.all()
     else:
@@ -71,55 +67,16 @@ def dashboard(request):
     }
     return HttpResponse(template.render(context, request))
 
-def loginrequest(request):
-    if request.method == "POST":
-        form = AuthenticationForm(request, data=request.POST)
-        if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                login(request, user)
-                messages.info(request, f"You are now logged in as {username}.")
-                return redirect("route-review")
-            else:
-                messages.error(request, "Invalid username or password.")
-        else:
-            messages.error(request, "Invalid username or password.")
-    form = AuthenticationForm()
-    return render(request=request, template_name="login.html", context={"login_form": form})
-
-def logout_view(request):
-    logout(request)
-    return render(request, 'home.html')
-
 @login_required(login_url='login')
 def merchuser(request, merchuser):
-    user = get_object_or_404(User, username=merchuser)
-    profile = User.objects.get(username=user)
+    user = get_object_or_404(Account, username=merchuser)
+    profile = Account.objects.get(username=user)
     url_name = resolve(request.path).url_name
-
     context = {
         'profile': profile,
         'url_name': url_name,
     }
-
-    return render(request, 'merchuser.html', context)
-
-
-@login_required(login_url='login')
-def account(request):
-    current_user = request.user
-    user = get_object_or_404(User, username=current_user)
-    profile = User.objects.get(username=user)
-    url_name = resolve(request.path).url_name
-
-    context = {
-        'profile': profile,
-        'url_name': url_name,
-    }
-
-    return render(request, 'merchuser.html', context)
+    return render(request, 'merch/merchandiser_view.html', context)
 
 
 @login_required(login_url='login')
@@ -190,51 +147,8 @@ def addItem(request):
                   {'form': form})
 
 @login_required
-def OrderSummaryView(request):
-        # current_user = request.user
-        # user = get_object_or_404(User, username=current_user)
-        user = User.objects.get(username=request.user)
-        order = Order.objects.filter(user=user)
-        context = {
-            'object' : order
-        }
-
-        return render(request, 'order_summary.html', context)
-
-@login_required
-def RouteReview(request):
-        user = User.objects.get(username=request.user)
-        if (request.user.is_superuser):
-            rtmd = Store.objects.all()
-        else:
-            rtmd = Store.objects.filter(RSRrt=user.username)
-
-        context = {
-            'list' : rtmd
-        }
-
-        return render(request, 'route-review.html', context)
-
-@login_required
-def StoreData(request, user_id, store_id):
-        user = User.objects.get(username=request.user)
-        if (request.user.is_superuser):
-            rtmd = Store.objects.all()
-        else:
-            rtmd = Store.objects.filter(RSRrt=user.username)
-            #storedisplay = Store.displays.objects.filter(RSRrt=user.username)
-
-        routeData = get_object_or_404(rtmd, pk=store_id)
-        md = Merch.objects.filter(store=routeData).order_by('-date')[:5]
-        #displays = Merch.objects.filter(store=routeData)
-        return render(request, 'route-review-data.html', {'store': routeData,
-                                                          'merch': md,
-                                                          #'display': displays
-                                                        })
-
-@login_required
 def SpecificStoreMerch(request, user_id, store_id):
-        user = User.objects.get(username=request.user)
+        user = Account.objects.get(username=request.user)
         if (request.user.is_superuser):
             rtmd = Store.objects.all()
         else:
@@ -244,17 +158,17 @@ def SpecificStoreMerch(request, user_id, store_id):
         routeData = get_object_or_404(rtmd, pk=store_id)
         md = Merch.objects.filter(store=routeData).order_by('-date')
         #displays = Merch.objects.filter(store=routeData)
-        return render(request, 'index.html', {'store': routeData,
+        return render(request, 'merch/index.html', {'store': routeData,
                                                           'latest_list': md,
-                                                          #'display': displays
-                                                        })
+                                                    #'display': displays
+                                                    })
 
 
 # class OrderSummaryView(LoginRequiredMixin, View):
 #     def get(self, *args, **kwargs):
 #
 #         try:
-#             user = get_object_or_404(User, username=self.kwargs.get('username'))
+#             user = get_object_or_404(Account, username=self.kwargs.get('username'))
 #             order = Order.objects.get(user, ordered=False)
 #             context = {
 #                 'object' : order
@@ -263,100 +177,6 @@ def SpecificStoreMerch(request, user_id, store_id):
 #         except ObjectDoesNotExist:
 #             messages.error(self.request, "You do not have an order")
 #             return redirect("order_summary.html")
-
-@login_required
-def add_to_cart(request, pk, quantity):
-    item = get_object_or_404(Item, pk=pk )
-    order_item, created = OrderItem.objects.get_or_create(
-        item = item,
-        user = request.user,
-        ordered = False
-    )
-    order_qs = Order.objects.filter(user=request.user, ordered=False)
-
-    if order_qs.exists():
-        order = order_qs[0]
-
-        if order.items.filter(item__pk=item.pk).exists():
-            order_item.quantity += quantity
-            order_item.save()
-            messages.info(request, "Added quantity Item")
-            return redirect("order-form")
-        else:
-            order.items.add(order_item)
-            order_item.quantity += quantity - 1
-            order_item.save()
-            messages.info(request, "Item added to your cart")
-            return redirect("order-form")
-    else:
-        ordered_date = timezone.now()
-        order = Order.objects.create(user=request.user, ordered_date=ordered_date)
-        order.items.add(order_item)
-        order_item.quantity += quantity - 1
-        order_item.save()
-        messages.info(request, "Item added to your cart")
-        return redirect("order-form")
-
-@login_required
-def remove_from_cart(request, pk):
-    item = get_object_or_404(Item, pk=pk )
-    order_qs = Order.objects.filter(
-        user=request.user,
-        ordered=False
-    )
-    if order_qs.exists():
-        order = order_qs[0]
-        if order.items.filter(item__pk=item.pk).exists():
-            order_item = OrderItem.objects.filter(
-                item=item,
-                user=request.user,
-                ordered=False
-            )[0]
-            order_item.delete()
-            messages.info(request, "Item \""+order_item.item.item_name+"\" remove from order")
-            return redirect("order-summary")
-        else:
-            messages.info(request, "This Item is not in your order")
-            return redirect("product", pk=pk)
-    else:
-        #add message doesnt have order
-        messages.info(request, "You do not have an Order")
-        return redirect("product", pk = pk)
-
-
-@login_required
-def reduce_quantity_item(request, pk):
-    item = get_object_or_404(Item, pk=pk )
-    order_qs = Order.objects.filter(
-        user = request.user,
-        ordered = False
-    )
-    if order_qs.exists():
-        order = order_qs[0]
-        if order.items.filter(item__pk=item.pk).exists() :
-            order_item = OrderItem.objects.filter(
-                item = item,
-                user = request.user,
-                ordered = False
-            )[0]
-            if order_item.quantity > 1:
-                order_item.quantity -= 1
-                order_item.save()
-            else:
-                order_item.delete()
-            messages.info(request, "Item quantity was updated")
-            return redirect("order-summary")
-        else:
-            messages.info(request, "This Item not in your cart")
-            return redirect("order-summary")
-    else:
-        #add message doesnt have order
-        messages.info(request, "You do not have an Order")
-        return redirect("order-summary")
-
-class orderForm(ListView):
-    model = Item
-    template_name = "order_form.html"
 
 @login_required
 def send_email(request):
@@ -405,3 +225,142 @@ def create_merch(request, storeid):
                   {'form': form,
                    'store': current_store
                    })
+
+@login_required
+def merch_request(request, *args, **kwargs):
+    context = {}
+    user = request.user
+    if user.is_authenticated:
+        #user_id = kwargs.get("user_id")
+        #rout = Request.objects.get(pk=user_id)
+        if user:
+            merch_request = Request.objects.filter(receiver=user, is_active=True)
+            context['merch_requests'] = merch_request
+        else:
+            return HttpResponse("You cant view another users friend requests")
+    else:
+        redirect('Login')
+    return render(request, "merch/request_view.html", context)
+
+@login_required
+def send_merch_request(request, receiver_id, store_id):
+
+    payload = {}
+    user_id = request.user.id
+    if user_id:
+        user = Account.objects.get(id=user_id)
+        receiver = Account.objects.get(id=receiver_id)
+        store = Store.objects.get(id=store_id)
+        try:
+            merch_request = Request.objects.filter(sender=user, receiver=receiver)
+            try:
+                for request in merch_request:
+                    if request.is_active and request.store == store:
+                        raise Exception("Already sent a request")
+
+                merch_request = Request(sender=user, receiver=receiver, store=store)
+                merch_request.save()
+                payload['response'] = "Merch request sent."
+            except Exception as e:
+                payload['response'] = str(e)
+        except Request.DoesNotExist:
+            mrq = Request(sender=user, receiver=receiver, store=store)
+            mrq.save()
+            payload['response'] = "Merch request sent."
+
+        if payload['response'] is None:
+            payload['response'] = "Something went wrong."
+    else:
+        payload['response'] = "Unable to send request."
+
+    return redirect('rsr:route-review')
+
+@login_required
+def cancel_merch_request(request, receiver_id, store_id):
+    payload = {}
+    user_id = request.user.id
+    if user_id:
+        user = Account.objects.get(id=user_id)
+        receiver = Account.objects.get(id=receiver_id)
+        store = Store.objects.get(id=store_id)
+        merch_request = Request.objects.filter(sender=user, receiver=receiver)
+        try:
+            for request in merch_request:
+                if request.is_active and request.store == store:
+                    request.delete()
+        except Exception as e:
+            payload['response'] = str(e)
+    else:
+        payload['response'] = "Unable to send request."
+    return redirect('rsr:route-review')
+
+@login_required
+def accept_merch_request(request, *args, **kwargs):
+    user_id = request.user.id
+
+    user = Account.objects.get(id=user_id)
+    payload = {}
+
+    merch_request_id = kwargs.get("request_id")
+    if merch_request_id:
+        merch_request = Request.objects.get(pk=merch_request_id)
+        if merch_request.receiver == user:
+            if merch_request:
+                merch_request.accept()
+                payload['response'] = "Merch request accepted."
+            else:
+                payload['response'] = "Could not find request."
+        else:
+            payload['response'] = "This is not your request!"
+    else:
+        payload['response'] = "Could not find request"
+    return redirect('merch:view-merch-request')
+
+@login_required
+def StoreData(request, user_id, store_id):
+        user = Account.objects.get(username=request.user)
+        if (request.user.is_superuser):
+            rtmd = Store.objects.all()
+        else:
+            rtmd = Store.objects.filter(RSRrt=user.username)
+            #storedisplay = Store.displays.objects.filter(RSRrt=user.username)
+
+        routeData = get_object_or_404(rtmd, pk=store_id)
+        md = Merch.objects.filter(store=routeData).order_by('-date')[:5]
+        #displays = Merch.objects.filter(store=routeData)
+        return render(request, 'rsr/route-review-data.html', {'store': routeData,
+                                                          'merch': md,
+                                                              #'display': displays
+                                                              })
+
+@login_required
+def decline_merch_request(request, *args, **kwargs):
+    user_id = request.user.id
+
+    user = Account.objects.get(id=user_id)
+    payload = {}
+
+    merch_request_id = kwargs.get("request_id")
+    if merch_request_id:
+        merch_request = Request.objects.get(pk=merch_request_id)
+        if merch_request.receiver == user:
+            if merch_request:
+                merch_request.decline()
+                payload['response'] = "Merch request accepted."
+            else:
+                payload['response'] = "Could not find request."
+        else:
+            payload['response'] = "This is not your request!"
+    else:
+        payload['response'] = "Could not find request"
+    return redirect('merch:view-merch-request')
+
+@login_required(login_url='login')
+def item(request):
+    template = loader.get_template('merch/product_view.html')
+    items = Item.objects.all()
+
+    context = {
+        'items': items,
+    }
+    return HttpResponse(template.render(context, request))

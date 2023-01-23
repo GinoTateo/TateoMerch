@@ -17,36 +17,45 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 from MerchManagerV1 import settings
-from merch import views
+from account import views
 
 urlpatterns = [
 
-    # Base patterns
+    # app patterns
     path('admin/', admin.site.urls),
+    path('account/', include('account.urls')),
     path('merch/', include('merch.urls')),
-    path('api/', include('api.urls')),
+    path('ops/', include('operations.urls')),
+    path('rsr/', include('rsr.urls')),
 
-    path('', views.home, name='index'),
+    # Home
+    path('', views.home, name='home'),
+    path('home', views.home, name='home'),
 
-    #
-    path('home', views.home, name='index'),
-    path('account/', views.account, name='account'),
-    path('login', views.loginrequest, name='login'),
+    path('login', views.login_view, name='login'),
     path('logout', views.logout_view, name='login'),
-    path('register', views.loginrequest, name='register'),
-    path('accounts/login/', views.loginrequest, name='login'),
+    path('register', views.login_view, name='register'),
+
+    # path('home', views.home, name='index'),
+    # path('account/', views.account, name='account'),
 
     #
-    path('add/', views.add, name='index'),
-    path('add/store', views.addStore, name='create store'),
-    path('add/merch', views.addMerch, name='create merch'),
-    path('add/EOW', views.addWD, name='create EOW'),
-    path('add/Item', views.addItem, name='create item'),
-
+    # path('accounts/login/', views.loginrequest, name='login'),
     #
-    path('route-review', views.RouteReview, name='route-review'),
-    path('merch/data/<int:user_id>/<int:store_id>', views.StoreData, name='route-review-data'),
-    path('merch/store/<int:user_id>/<int:store_id>', views.SpecificStoreMerch, name='specific-store-data'),
+    # #
+    # path('add/', views.add, name='index'),
+    # path('add/store', views.addStore, name='create store'),
+    # path('add/merch', views.addMerch, name='create merch'),
+    # path('add/EOW', views.addWD, name='create EOW'),
+    # path('add/Item', views.addItem, name='create item'),
+    #
+    # #
+    # path('merchrequest', views.merch_request, name='requests'),
+    #
+    # #
+    # path('route-review', views.RouteReview, name='route-review'),
+    # path('merch/data/<int:user_id>/<int:store_id>', views.StoreData, name='route-review-data'),
+    # path('merch/store/<int:user_id>/<int:store_id>', views.SpecificStoreMerch, name='specific-store-data'),
 
     # url(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
     # url(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),

@@ -1,0 +1,111 @@
+{% extends 'navbar.html' %}
+{% load static %}
+
+{% block content %}
+
+<style type="text/css">
+    .grad {
+        background-image: linear-gradient(#FDB99B,#CF8BF3,#A770EF); /*#2657eb*/
+        background-repeat: no-repeat;
+        min-height: 1000px;
+    }
+	.image-container{
+		max-width: 250px;
+		height: auto;
+	}
+	.field-heading{
+		color: var(--secondary-text-color);
+	}
+	.icon-container:hover {
+		opacity: 0.3;
+		cursor: pointer;
+	}
+	.Merchs-icon{
+		color: #4287f5;
+		font-size: 40px;
+	}
+	.person-add-icon{
+		color: #4287f5;
+		font-size: 40px;
+	}
+	.Merch-text{
+		font-weight: 500;
+		color: black;
+	}
+	.Merchs-btn{
+		background-color: #cccccc;
+		border-color: #cccccc;
+		color: #000;
+		font-weight: 500;
+	}
+	.Merchs-btn:hover {
+		background-color: #bfbfbf;
+		border-color: #bfbfbf;
+	}
+	.dropdown-toggle::after { 
+		content: none; 
+	}
+	.card{
+		border-radius: 12px;
+	}
+	.material-icons{
+		font-size: 30px;
+	}
+	.material-icons:hover{
+		cursor: pointer;
+	}
+	.confirm-Merch-request{
+		color: green;
+	}
+	.confirm-Merch-request:hover {
+		opacity: 0.3;
+	}
+	.decline-Merch-request:hover {
+		opacity: 0.3;
+	}
+	.decline-Merch-request{
+		color: red;
+	}
+	.message-btn-text{
+		font-weight: 500;
+	}
+</style>
+<body class="grad">
+    <div class="container-fluid">
+        <div class="d-flex flex-row justify-content-center flex-wrap align-items-start">
+
+            <div class="card profile-card m-2">
+              <div class="card-body">
+                <div class="d-flex flex-column justify-content-center p-4">
+                    <div>
+                        <h5>{{ title }}</h5>
+                    </div>
+                    <p class="mt-4 mb-1 field-heading">Email</p>
+                    {%  if is_self %}
+                        <h5>{{email}}</h5>
+                    {% else %}
+                        {% if hide_email %}
+                            <h5>**********</h5>
+                        {% else %}
+                            <h5>{{email}}</h5>
+                        {% endif %}
+                    {% endif %}
+                    <p class="mt-4 mb-1 field-heading">Username</p>
+                    <h5>{{username}}</h5>
+
+                    <!-- If Auth user is viewing their own profile -->
+                    {% if is_self %}
+                    <a  class="mt-4 btn btn-primary" href="{% url 'account:edit' user_id=id %}">Update</a>
+    {#				<div class="d-flex flex-column mt-4">#}
+    {#					<a class="m-auto" href="{% url 'account:password_change' %}">Change password</a>#}
+    {#				</div>#}
+                    {% endif %}
+                </div>
+              </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+
+{% endblock content %}
