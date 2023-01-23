@@ -54,10 +54,12 @@
                     <a class="dropdown-item" href="{% url 'account:login' %}">
                         Login
                     </a>
+                    {% if user.is_authenticated %}
                     <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="{% url 'account:register' %}">
-                        Register
+                    <a class="dropdown-item" href="{% url 'account:view' user.id %}">
+                        Account
                     </a>
+                        {% endif %}
                 </div>
             </div>
         {% endif %}

@@ -15,7 +15,7 @@ urlpatterns = [
     path('login', views.login_view, name='login'),
     path('register', views.login_view, name='login'),
     path('logout', views.logout_view, name='logout'),
-    path('register', views.login_view, name='register'),
+    # path('register', views.login_view, name='register'),
 
 
     # Password reset links (ref: https://github.com/django/django/blob/master/django/contrib/auth/views.py)

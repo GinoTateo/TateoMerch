@@ -12,17 +12,21 @@
   </head>
 
     <style>
-    .grad {
-    background-image: linear-gradient(#FDB99B,#CF8BF3,#A770EF); /*#2657eb*/
-    }
-    .blank_row {
-    height: 700px; /* overwrites any other rules */
-    background-color: #FFFFFF;
-    }
-
-  </style>
+      .grad {
+                background-image: linear-gradient(#659999,#f4791f);
+                background-repeat: no-repeat;
+                height: 100vh;;
+            }
+    </style>
 
   <body class="grad">
+    {% for message in messages %}
+    <div class="container-fluid p-0">
+      <div class="alert {{ message.tags }} alert-dismissible" role="alert" >
+        {{ message }}
+      </div>
+    </div>
+    {% endfor %}
     <section class="vh-100 gradient-custom">
       <div class="container py-5 h-100">
         <div class="row d-flex justify-content-center align-items-center h-100">
@@ -32,42 +36,42 @@
 
                 <div class="mb-md-5 mt-md-4 pb-5">
 
-                  <h2 style="font-weight: lighter; background: linear-gradient(to right, #FDB99B,#CF8BF3,#A770EF);
+                  <h2 style="font-weight: lighter; background: linear-gradient(to right, #659999,#f4791f);
             -webkit-text-fill-color: transparent;
             -webkit-background-clip: text;
                 ">TateoMerch</h2>
 
                     <br>
 
-            <form method="post" action="{% url 'account:login' %}">
-              {% csrf_token %}
-              <table>
-                <tr>
-                    <input type="text" class="form-control form-control-lg" placeholder = "Username" name="username"/>
-                    <label class="form-label" for="typeEmailX">Username</label>
-                </tr>
-                <tr>
-                    <input type="password" id="password" class="form-control form-control-lg" placeholder = "Password" name="password" />
-                     <label class="form-label" for="typePasswordX">Password</label>
+                        <form method="post" action="{% url 'account:login' %}">
+                          {% csrf_token %}
+                          <table>
+                            <tr>
+                                <input type="text" class="form-control form-control-lg" placeholder = "Email" name="username"/>
+                                <label class="form-label" for="typeEmailX">Email</label>
+                            </tr>
+                            <tr>
+                                <input type="password" id="password" class="form-control form-control-lg" placeholder = "Password" name="password" />
+                                 <label class="form-label" for="typePasswordX">Password</label>
 
-                </tr>
-              </table>
+                            </tr>
+                          </table>
 
-{#                <p class="small mb-5 pb-lg-2"><a class="text-white-50" href="#!">Forgot password?</a></p>#}
-                 <br>
+            {#                <p class="small mb-5 pb-lg-2"><a class="text-white-50" href="#!">Forgot password?</a></p>#}
+                             <br>
 
-                  <button class="btn btn-outline-light btn-lg px-5 " value="{{ next }} type="submit">Login</button>
+                              <button class="btn btn-outline-light btn-lg px-5 " value="{{ next }} type="submit">Login</button>
 
-            </form>
+                        </form>
 
 
-                </div>
-
+                    </div>
                 <div>
+
+
     {#              <p class="mb-0">Don't have an account? <a href="#!" class="text-white-50 fw-bold">Sign Up</a>#}
     {#              </p>#}
                 </div>
-
               </div>
             </div>
           </div>

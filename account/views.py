@@ -22,7 +22,7 @@ def login_view(request, *args, **kwargs):
             user = authenticate(username=username, password=password)
             if user is not None:
                 login(request, user)
-                messages.info(request, f"You are now logged in as {username}.")
+                messages.info(request, f"You are now logged in as {user}.")
                 return redirect("home")
             else:
                 messages.error(request, "Invalid username or password.")
@@ -60,27 +60,6 @@ def account(request, *args, **kwargs):
         context['profile_image'] = account.profile_image.url
         context['hide_email'] = account.hide_email
 
-        # Define template variables
-        is_self = True
-        user = request.user
-        if user.is_authenticated and user != account:
-            is_self = False
-            if Request.filter(pk=user.id):
-                is_friend = True
-            else:
-                is_friend = False
-
-
-        elif not user.is_authenticated:
-            is_self = False
-        else:
-            try:
-                friend_requests = Request.objects.filter(receiver=user, is_active=True)
-            except:
-                pass
-
-        # Set the template variables to the values
-        context['is_self'] = is_self
         return render(request, "account/account.html", context)
 
 

@@ -33,8 +33,8 @@ urlpatterns = [
     path('home', views.home, name='home'),
 
     path('login', views.login_view, name='login'),
-    path('logout', views.logout_view, name='login'),
-    path('register', views.login_view, name='register'),
+    path('logout', views.logout_view, name='logout'),
+    # path('register', views.login_view, name='register'),
 
     # path('home', views.home, name='index'),
     # path('account/', views.account, name='account'),
