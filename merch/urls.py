@@ -4,26 +4,39 @@ from django.conf.urls.static import static
 from MerchManagerV1 import settings
 from . import views
 
-
 app_name = "merch"
+
 urlpatterns = [
-path('merch_request/<receiver_id>/<store_id>', views.send_merch_request, name='send-merch-request'),
+
     # Base
     path('', views.index, name='index'),
 
+    #Dashboard views
     path('dashboard', views.dashboard, name='dashboard'),
     path('<int:merch_id>/', views.detail, name='detail'),
     path('data/<int:user_id>/<int:store_id>', views.StoreData, name='store-data'),
     path('docket/<int:user_id>/', views.docket, name='docket'),
     path('items', views.item, name='item'),
+    path('route', views.route, name='item'),
 
+    # Requests
     path('merch_request/', views.merch_request, name='view-merch-request'),
     path('accept_merch_request/<int:request_id>', views.accept_merch_request, name='accept-merch-request'),
     path('decline_merch_request/<int:request_id>', views.decline_merch_request, name='decline-merch-request'),
     path('merch_request/<receiver_id>/<store_id>', views.send_merch_request, name='send-merch-request'),
     path('cancel_merch_request/<receiver_id>/<store_id>/', views.cancel_merch_request, name='cancel-merch-request'),
+    path('plan-request/', views.plan_request, name='plan-request'),
 
-
+    # Merchandising
+    path('merchandise_account/<int:store_id>/<int:docket_id>', views.merchandise_account , name='account-merch'),
+    path('begin-day/<user>', views.begin_day, name='begin-day'),
+    path('plan-day/<int:user_id>/<int:year>-<int:month>-<int:day>', views.plan_day, name='begin-day'),
+    path('add-to-plan/', views.add_to_plan, name='add-to-plan'),
+    path('complete-day/<user>/<int:docket_id>', views.complete_day, name='complete-day'),
+    path('add-to-order/', views.add_item_order, name='add-to-order'),
+    path('add-to-oos/', views.add_to_oos, name='add-to-oos'),
+    path('complete-merch/<int:merch_id>/<int:docket_id>', views.complete_merch, name='complete-merch'),
+    path('upload-image/', views.upload_image, name='upload-img'),
 
     # # Add
     # path('add', views.add, name='add toolbar'),
@@ -53,6 +66,3 @@ path('merch_request/<receiver_id>/<store_id>', views.send_merch_request, name='s
     # path('send', views.send_email, name='send-email'),
 
 ]
-
-if settings.DEBUG:  # new
-    static(settings.STATIC_URL,document_root=settings.MEDIA_ROOT)

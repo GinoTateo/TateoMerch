@@ -17,18 +17,18 @@
 
        <div style="display: flex; flex-direction: row; flex-wrap: wrap">
           {% for docket in list %}
-            <div class="card" style="width: 40vh; margin: 10px">
+            <div class="card bg-dark text-white" style="width: 40vh; margin: 10px">
               <div class="card-body">
-                  <h4 class="card-title">{{ docket.date }}</h4>
-                    <p class="card-text"><small class="text-muted">Merchandiser: {{ docket.user }}</small></p>
+                  <h4 class="card-title">{{ docket.startDate }}</h4>
+                    <p class="card-text"><small class="text-muted">Merchandiser: {{ docket.user.first_name }} {{ docket.user.last_name }}</small></p>
                     {% if docket.store_list %}
-                        <div class="card" style="width: auto; margin: 20px">
+                        <div class="card text-dark" style="width: auto; margin: 20px">
                             <div class="card-header">
-                                <h6> {{ docket.store_list.count }} Stores  </h6>
+                                <h6> {{ docket.merch_list.count }} Stores  </h6>
                             </div>
-                            {% for store in docket.store_list.all %}
+                            {% for store in docket.merch_list.all %}
                              <ul class="list-group list-group-flush">
-                                 <li class="list-group-item"> <a href="/merch/data/{{ docket.user.id }}/{{ store.id }}" >{{ store.name }} {% if store.number %} {{ store.number }} {% endif %}</a> </li>
+                                 <li class="list-group-item"> <a href="/merch/{{ store.id }}" >{{ store.store.name }} {% if store.store.number %} {{ store.store.number }} {% endif %}</a> </li>
                              </ul>
                             {% empty %}
                                 <li class="list-group-item">No stores</li>

@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 
-from account.forms import AccountAuthenticationForm, AccountUpdateForm
+from account.forms import AccountAuthenticationForm, AccountUpdateForm, RegistrationForm
 from account.models import Account
 from merch.models import Request, Merch
 
@@ -39,6 +39,9 @@ def get_redirect_if_exists(request):
             redirect = str(request.GET.get("next"))
     return redirect
 
+def get_lower(username):
+    lower_case = username.lower
+    return lower_case
 
 def logout_view(request):
     logout(request)
@@ -99,3 +102,22 @@ def edit_account_view(request, *args, **kwargs):
         context['form'] = form
     return render(request, "account/edit_account.html", context)
 
+def register_view(request, *args, **kwargs):
+    user = request.user
+    if user.is_authenticated:
+        return HttpResponse("You are already authenticated as " + str(user.email))
+
+    context = {}
+    if request.POST:
+        form = RegistrationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('/login')
+        else:
+            context['registration_form'] = form
+
+    else:
+        form = RegistrationForm()
+        context['registration_form'] = form
+    return render(request, 'account/register.html', context)

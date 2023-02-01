@@ -27,6 +27,7 @@ urlpatterns = [
     path('merch/', include('merch.urls')),
     path('ops/', include('operations.urls')),
     path('rsr/', include('rsr.urls')),
+    path('api/', include('api.urls')),
 
     # Home
     path('', views.home, name='home'),
@@ -34,6 +35,7 @@ urlpatterns = [
 
     path('login', views.login_view, name='login'),
     path('logout', views.logout_view, name='logout'),
+    path('register', views.register_view, name='register'),
     # path('register', views.login_view, name='register'),
 
     # path('home', views.home, name='index'),
@@ -60,7 +62,3 @@ urlpatterns = [
     # url(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
     # url(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
 ]
-
-if settings.DEBUG:  # new
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
