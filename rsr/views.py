@@ -33,7 +33,7 @@ def StoreData(request, user_id, store_id):
             #storedisplay = Store.displays.objects.filter(RSRrt=user.username)
 
         routeData = get_object_or_404(rtmd, pk=store_id)
-        md = Merch.objects.filter(store=routeData).order_by('-date')[:5]
+        md = Merch.objects.filter(store=routeData).order_by('-startDate')[:5]
         #displays = Merch.objects.filter(store=routeData)
         return render(request, 'rsr/route-review-data.html', {'store': routeData,
                                                           'merch': md,

@@ -14,7 +14,8 @@
       .grad {
                 background-image: linear-gradient(#659999,#f4791f);
                 background-repeat: no-repeat;
-                height: 100vh;;
+                height: 100%;
+                background-attachment: fixed;
             }
     </style>
   <body class="grad">
@@ -67,10 +68,10 @@
                     <div>
                         <h6>
                         <br>
-                          {% for item in merch %}
-                              <p>{{ forloop.counter }}. {{ item.item_name }}
+                          {% for date in merch %}
+                              <p>{{ forloop.counter }}. {{ date.completeDate }}
                               {{ item.date }}
-                              <a href="/merch/{{ item.id }}" class="btn btn-primary">View merch</a>
+                              <a href="/merch/{{ date.id }}" class="btn btn-primary">View merch</a>
                           {% empty %}
                               No merchandising data available.
                           {% endfor %}
@@ -79,7 +80,6 @@
                     <a href="/merch/store/{{ user.id }}/{{ store.id}}" class="btn btn-primary">View More</a>
                         {% endif %}
                     </div>
-{#                <img src= "{{ merch.upload.url }}" alt="{{ merch.store }}" width="300" height="500">#}
               </div>
             </div>
 

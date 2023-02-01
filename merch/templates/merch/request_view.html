@@ -19,7 +19,7 @@
                  <div style="display: flex; flex-direction: row; flex-wrap: wrap">
                  {% for request in merch_requests %}
 
-            <div class="card " style="width: 40vh; margin: 10px">
+            <div class="card bg-dark text-white" style="width: 40vh; margin: 10px">
               <div class="card-body">
                 <h5 class="card-title">{{ request.store.name }}{% if request.store.number %} #{{ request.store.number }} {% endif %}</h5>
                   <h6 class="card-subtitle mb-2 text-muted">{{ request.store.Address }}, {{ request.store.City }}</h6>
@@ -32,7 +32,7 @@
              {% endfor %}
                  </div>
              {% else %}
-                 <div class="card " style="width: 22rem; margin: 10px">
+                 <div class="card bg-dark text-white" style="width: 19rem; margin: 10px">
                  <div class="card-body">
                     <h6>No requests at this time.</h6>
                  </div>

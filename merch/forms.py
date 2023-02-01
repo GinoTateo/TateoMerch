@@ -2,7 +2,7 @@ from django import forms
 from django.forms import ModelForm
 
 from . import models
-from .models import Store, Merch, WeeklyData, User, Item
+from .models import Store, Merch, User, Item
 
 
 # class StoreForm(forms.ModelForm):
@@ -15,10 +15,10 @@ from .models import Store, Merch, WeeklyData, User, Item
 #      model = Item
 #      fields = '__all__'
 #
-# class MerchForm(forms.ModelForm):
-#     class Meta:
-#         model = Merch
-#         fields = ['OOS', 'worked_cases', 'upload', 'store', 'user']
+class MerchForm(forms.ModelForm):
+    class Meta:
+        model = Merch
+        fields = ['upload']
 #
 #     def __init__(self, *args, **kwargs):
 #         super(MerchForm, self).__init__(*args, **kwargs)
