@@ -1,9 +1,7 @@
 asgiref==3.5.2
 certifi==2022.12.7
 cffi==1.15.1
-
 cloudinary==1.32.0
-
 Django==3.2.16
 django-active-link==0.1.8
 django-bootstrap-icons==0.8.2
@@ -11,16 +9,13 @@ django-filter==22.1
 djangorestframework==3.14.0
 gunicorn==20.1.0
 joblib==1.2.0
-numpy==1.24.1
 pandas==1.5.2
 Pillow==9.3.0
 pillow-heif==0.7.2
 pycparser==2.21
-
 python-dateutil==2.8.2
 pytz==2022.6
 pyzbar==0.1.9
-
 scikit-learn==1.2.0
 scipy==1.10.0
 six==1.16.0
