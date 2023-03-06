@@ -2,7 +2,7 @@ asgiref==3.5.2
 certifi==2022.12.7
 cffi==1.15.1
 cloudinary==1.32.0
-Django==4.1.6
+Django==3.7.10
 django-active-link==0.1.8
 django-bootstrap-icons==0.8.2
 django-cloudinary-storage==0.3.0
