@@ -19,4 +19,10 @@ urlpatterns = [
     path('order-summary', views.OrderSummaryView, name='order-summary'),
     path('data/<int:item_id>', views.ItemData, name='item-data'),
 
+    path('warehouse-dates', views.WarehouseDateItemView, name='warehouse-dates'),
+    path('warehouse-dates/input', views.WarehouseDateForm, name='warehouse-dates-form'),
+    path('warehouse-dates/<int:item_id>/skip', views.WarehouseDateFormSkip, name='warehouse-dates-form-skip'),
+    path('warehouse-dates/<int:item_id>', views.WarehouseDateItemForm, name='warehouse-date-form'),
+    path('warehouse-dates/<int:item_id>/input', views.WarehouseDateItemInput, name='warehouse-date-input'),
+
 ]

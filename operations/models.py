@@ -31,6 +31,7 @@ class Item(models.Model):
     item_size = models.CharField(choices=SIZE, max_length=25)
     item_name = models.CharField(max_length=100)
     item_number = models.IntegerField(default=0)
+    item_date = models.DateField(blank=True, null=True)
     cpc = models.IntegerField(blank=True, null=True)
 
     def __str__(self):

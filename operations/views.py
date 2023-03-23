@@ -1,5 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
+from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 from django.views.generic import DetailView, ListView
@@ -8,6 +10,7 @@ from rest_framework.filters import BaseFilterBackend
 from account.models import Account
 # from operations.filters import ItemFilter
 from operations.filters import ItemFilter
+from operations.forms import WarehouseForm
 from operations.models import Item, Order, OrderItem
 
 
@@ -178,3 +181,77 @@ def ItemData(request, item_id):
     item = Item.objects.get(id=item_id)
 
     return render(request, "item_data.html", {'item': item })
+
+
+def WarehouseDateItemView(request):
+    items = Item.objects.filter(Q(item_type='G')|Q(item_type='W'))
+
+    return render(request, "warehouse_dates.html", {'items': items})
+
+
+@login_required
+def WarehouseDateItemForm(request, item_id):
+    item = Item.objects.get(id=item_id)
+    items = Item.objects.filter(Q(item_type='G') | Q(item_type='W'))
+    last_item = items.last()
+    form = WarehouseForm()
+    if item.pk is last_item.pk:
+        return render(request, "warehouse_dates.html", {'items': items})
+    return render(request, "item_date_form.html", {'item': item,'form': form})
+
+@login_required
+def WarehouseDateItemInput(request, item_id):
+
+    if request.method == 'POST':
+        # create a form instance and populate it with data from the request:
+        form = WarehouseForm(request.POST)
+        # check whether it's valid:
+        if form.is_valid():
+            date = form.cleaned_data['Date']
+
+            item = Item.objects.get(id=item_id)
+            item.item_date = date
+            item.save()
+
+            items = Item.objects.filter(Q(item_type='G') | Q(item_type='W'))
+            last_item = items.last()
+            item = Item.objects.get(id=item_id+1)
+            if item.pk is last_item.pk:
+                return render(request, "warehouse_dates.html", {'items': items})
+            return render(request, "item_date_form.html", {'form': form, 'item': item})
+
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        form = WarehouseForm()
+
+    return render(request, 'item_date_form.html', {'form': form})
+
+
+@login_required
+def WarehouseDateForm(request):
+    items = Item.objects.all()
+
+    for item in items:
+        item.item_date = None
+        item.save()
+
+    item = Item.objects.first()
+    form = WarehouseForm()
+
+    return render(request, 'item_date_form.html', {'form': form, 'item': item})
+
+
+@login_required
+def WarehouseDateFormSkip(request, item_id):
+
+    item = Item.objects.get(id=item_id+1)
+    form = WarehouseForm()
+
+    items = Item.objects.filter(Q(item_type='G') | Q(item_type='W'))
+    last_item = items.last()
+
+    if item.pk is last_item.pk:
+        return render(request, "warehouse_dates.html", {'items': items})
+
+    return render(request, "item_date_form.html", {'form': form, 'item': item})
+
