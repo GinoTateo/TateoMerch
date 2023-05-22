@@ -16,8 +16,17 @@ urlpatterns = [
     path('product/<pk>/', ProductView.as_view(), name='product'),
     path('orderform', login_required(orderForm.as_view()), name='order-form'),
 
+    path('warehouse/<int:warehouse_id>/orderform', login_required(orderForm.as_view()), name='warehouse-orderform'),
+    path('warehouse/<int:warehouse_id>/inventory', views.WarehouseDateItemView, name='warehouse-inventory'),
+
+    path('warehouse/<int:warehouse_id>/inventory/physical', views.WarehouseDateForm, name='warehouse-physical-inventory'),
+
     path('order-summary', views.OrderSummaryView, name='order-summary'),
     path('data/<int:item_id>', views.ItemData, name='item-data'),
+
+    path('dashboard/', views.WarehouseDashboard, name='warehouse-dash'),
+    path('warehouse/<int:warehouse_id>', views.WarehouseDetail, name='warehouse-detail'),
+
 
     path('warehouse-dates', views.WarehouseDateItemView, name='warehouse-dates'),
     path('warehouse-dates/input', views.WarehouseDateForm, name='warehouse-dates-form'),

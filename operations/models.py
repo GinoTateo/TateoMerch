@@ -102,10 +102,10 @@ class InventoryItem(models.Model):
 
 class Inventory(models.Model):
     items               = models.ManyToManyField(InventoryItem)
-    last_inventory      = models.DateTimeField(auto_now_add=True)
+    date                = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.items}  {self.items.count()}"
+        return f"{self.date}"
 
 
 class Warehouse(models.Model):
@@ -114,4 +114,7 @@ class Warehouse(models.Model):
     address             = models.TextField(default="N/A")
     region              = models.IntegerField(default=0000)
     inventory           = models.ManyToManyField(Inventory, blank=True, null=True)
+
+    def __str__(self):
+        return f"Warehouse  {self.number}"
 

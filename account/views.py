@@ -121,3 +121,7 @@ def register_view(request, *args, **kwargs):
         form = RegistrationForm()
         context['registration_form'] = form
     return render(request, 'account/register.html', context)
+
+
+def service(request):
+    return render(request, 'service.html')

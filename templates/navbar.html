@@ -26,11 +26,12 @@
                 ">TateoMerch</a>
           <div class=" navbar-collapse" id="navbarNavAltMarkup" >
             <div class="navbar-nav">
-            <a class="nav-link" href="/ops/warehouse-dates">Warehouse</a>
+            <a class="nav-link" href="/service">Services</a>
                 {% if user.is_merch %}
               <a class="nav-link" href="/merch/dashboard">Merch</a>
                 {% endif %}
             {% if user.is_rsr %}
+                <a class="nav-link" href="/ops/dashboard">Warehouse</a>
               <a class="nav-link" href="/rsr/route-review">Route</a>
 {#              <a class="nav-link" href="/rsr/orderform">Order</a>#}
             {% endif %}
