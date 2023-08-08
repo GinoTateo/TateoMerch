@@ -18,3 +18,4 @@ admin.site.register(Order)
 admin.site.register(Warehouse)
 admin.site.register(Inventory)
 admin.site.register(InventoryItem)
+

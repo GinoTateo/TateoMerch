@@ -1,6 +1,7 @@
 from django.db import models
 from django.urls import reverse
 
+import rsr.models
 from MerchManagerV1 import settings
 
 TYPE = (
@@ -103,6 +104,7 @@ class InventoryItem(models.Model):
 class Inventory(models.Model):
     items               = models.ManyToManyField(InventoryItem)
     date                = models.DateTimeField(auto_now_add=True)
+    amount              = models.IntegerField(default=0)
 
     def __str__(self):
         return f"{self.date}"
@@ -114,7 +116,6 @@ class Warehouse(models.Model):
     address             = models.TextField(default="N/A")
     region              = models.IntegerField(default=0000)
     inventory           = models.ManyToManyField(Inventory, blank=True, null=True)
+    routes              = models.ManyToManyField(rsr.models.Route, blank=True, null=True)
 
-    def __str__(self):
-        return f"Warehouse  {self.number}"
 

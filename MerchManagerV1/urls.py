@@ -45,7 +45,7 @@ urlpatterns = [
     # path('account/', views.account, name='account'),
 
     #
-    # path('accounts/login/', views.loginrequest, name='login'),
+    path('accounts/login/', views.login_view, name='login'),
     #
     # #
     # path('add/', views.add, name='index'),

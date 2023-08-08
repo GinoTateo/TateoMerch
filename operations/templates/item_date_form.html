@@ -23,7 +23,7 @@
   <script>
 function skip() {
     const NextItem = {{ item.id }};
-    location.href = `/ops/warehouse-dates/${NextItem}/skip`;
+    location.href = `/ops/warehouse-dates/${NextItem}/{{ inventory.id }}/skip`;
 }
 </script>
       {% if item %}
@@ -33,7 +33,7 @@ function skip() {
                     <h4 class="card-title">{{ item.item_brand }}{{ item.item_type }}{{ item.item_size }} {{ item.item_name }}</h4>
                       <p class="card-text"><small class="text-muted">{{ item.item_number }}</small></p>
 
-                        <form action="/ops/warehouse-dates/{{ item.id }}/input" method="post">
+                        <form action="/ops/warehouse-dates/{{ item.id }}/{{ inventory.id }}/input" method="post">
                             {% csrf_token %}
                             {{ form }}
                             <input type="submit" value="Submit">

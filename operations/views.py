@@ -1,17 +1,18 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 from django.views.generic import DetailView, ListView
 from rest_framework.filters import BaseFilterBackend
 
+import rsr.models
 from account.models import Account
 # from operations.filters import ItemFilter
 from operations.filters import ItemFilter
-from operations.forms import WarehouseForm
-from operations.models import Item, Order, OrderItem, Warehouse, Inventory
+from operations.forms import WarehouseForm, palletForm
+from operations.models import Item, Order, OrderItem, Warehouse, Inventory, InventoryItem
 
 
 class ProductView(DetailView):
@@ -193,7 +194,7 @@ def WarehouseDateItemView(request, warehouse_id):
     inv_items = inventory.items.all()
     items = Item.objects.filter(Q(item_type='G') | Q(item_type='W'))
 
-    return render(request, "warehouse_dates.html", {'items': inv_items})
+    return render(request, "warehouse_dates.html", {'items': inv_items, 'warehouse': warehouse})
 
 
 @login_required
@@ -208,30 +209,42 @@ def WarehouseDateItemForm(request, item_id):
 
 
 @login_required
-def WarehouseDateItemInput(request, item_id):
+def WarehouseDateItemInput(request, item_id, inventory_id):
+    inventory = Inventory.objects.get(id=inventory_id)
     if request.method == 'POST':
         # create a form instance and populate it with data from the request:
         form = WarehouseForm(request.POST)
         # check whether it's valid:
         if form.is_valid():
             date = form.cleaned_data['Date']
+            amount = form.cleaned_data['Amount']
 
             item = Item.objects.get(id=item_id)
-            item.item_date = date
-            item.save()
+
+            add_item, created = InventoryItem.objects.get_or_create(
+                item=item,
+                total_quantity=amount,
+                item_date=date,
+            )
+
+
+            inventory.items.add(add_item)
+            inventory.save()
+
+
 
             items = Item.objects.filter(Q(item_type='G') | Q(item_type='W'))
             last_item = items.last()
             item = Item.objects.get(id=item_id + 1)
             if item.pk is last_item.pk:
                 return render(request, "warehouse_dates.html", {'items': items})
-            return render(request, "item_date_form.html", {'form': form, 'item': item})
+            return render(request, "item_date_form.html", {'form': form, 'item': item, 'inventory': inventory})
 
     # if a GET (or any other method) we'll create a blank form
     else:
         form = WarehouseForm()
 
-    return render(request, 'item_date_form.html', {'form': form})
+    return render(request, 'item_date_form.html', {'form': form, 'inventory': inventory})
 
 
 @login_required
@@ -246,14 +259,15 @@ def WarehouseDateForm(request, warehouse_id):
         item.item_date = None
         item.save()
 
-    item = items.objects.first()
+    item = items.first()
     form = WarehouseForm()
 
-    return render(request, 'item_date_form.html', {'form': form, 'item': item})
+    return render(request, 'item_date_form.html', {'form': form, 'item': item, 'inventory': inventory})
 
 
 @login_required
-def WarehouseDateFormSkip(request, item_id):
+def WarehouseDateFormSkip(request, item_id, inventory_id):
+    inventory = Inventory.objects.get(id=inventory_id)
     item = Item.objects.get(id=item_id + 1)
     form = WarehouseForm()
 
@@ -261,20 +275,79 @@ def WarehouseDateFormSkip(request, item_id):
     last_item = items.last()
 
     if item.pk is last_item.pk:
-        return render(request, "warehouse_dates.html", {'items': items})
+        return render(request, "warehouse_dates.html", {'items': items,'inventory': inventory})
 
-    return render(request, "item_date_form.html", {'form': form, 'item': item})
+    return render(request, "item_date_form.html", {'form': form, 'item': item, 'inventory': inventory})
 
 
-@login_required
 def WarehouseDashboard(request):
     warehouses = Warehouse.objects.all()
 
     return render(request, 'warehouse_dashboard.html', {'warehouses': warehouses})
 
 
-@login_required
 def WarehouseDetail(request, warehouse_id):
     warehouse = Warehouse.objects.get(id=warehouse_id)
+    routes = warehouse.routes.all()
 
-    return render(request, 'warehouse_detail.html', {'warehouse': warehouse})
+    return render(request, 'warehouse_detail.html', {'warehouse': warehouse, 'routes': routes})
+
+
+import io
+from django.http import FileResponse
+from reportlab.pdfgen import canvas
+
+
+def PalletPages(request, route_id):
+    if request.method == 'POST':
+        RT = rsr.models.Route.objects.get(id=route_id)
+        RTnum = RT.number
+
+        if request.method == 'POST':
+            # Instanciate the form with posted data
+
+            pages = int(request.POST.get('pallets'))
+            # Create a file-like buffer to receive PDF data.
+            buffer = io.BytesIO()
+
+            # Create the PDF object, using the buffer as its "file."
+            p = canvas.Canvas(buffer)
+            p.setTitle(f"RT{RTnum}_pallet_pages")
+            # Draw things on the PDF. Here's where the PDF generation happens.
+            # See the ReportLab documentation for the full list of functionality.
+            for page in range(pages):
+                p.setFont("Helvetica", 100)
+                p.drawString(150, 750, "RT " + RTnum.__str__(), )
+                p.drawString(150, 150, f'{page + 1} of {pages}')
+                p.showPage()
+            # Close the PDF object cleanly, and we're done.
+
+            p.save()
+
+            # FileResponse sets the Content-Disposition header so that browsers
+            # present the option to save the file.
+            buffer.seek(0)
+            return FileResponse(buffer, as_attachment=True, filename=f'RT{RTnum}_pallet_pages.pdf')
+        else:  # The form is invalid return a json response
+            return JsonResponse({"Error": "Form is invalid"}, status=400)
+    else:
+        return render(request, 'warehouse_print.html')
+    # return render(request, 'pallet-pages.html', {'RTnum': RTnum, 'pages': pages})
+
+
+def PrintPalletPages(request, warehouse_id):
+    warehouse = Warehouse.objects.get(id=warehouse_id)
+    routes = warehouse.routes.all()
+    return render(request, 'warehouse_print.html', {'warehouse': warehouse, 'routes': routes})
+
+
+@login_required
+def WarehousePhysicalInventory(request, item_id):
+    return render(request, 'item_date_form.html', {'form': form})
+
+@login_required
+def WarehouseManagerDetail(request, warehouse_id):
+    warehouse = Warehouse.objects.get(id=warehouse_id)
+    routes = warehouse.routes.all()
+
+    return render(request, 'warehouse_manager_detail.html', {'warehouse': warehouse, 'routes': routes})

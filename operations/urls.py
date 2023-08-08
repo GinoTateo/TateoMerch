@@ -26,12 +26,17 @@ urlpatterns = [
 
     path('dashboard/', views.WarehouseDashboard, name='warehouse-dash'),
     path('warehouse/<int:warehouse_id>', views.WarehouseDetail, name='warehouse-detail'),
+    path('warehouse/<int:warehouse_id>/warehousemanager', views.WarehouseManagerDetail, name='warehouse-detail'),
 
 
     path('warehouse-dates', views.WarehouseDateItemView, name='warehouse-dates'),
     path('warehouse-dates/input', views.WarehouseDateForm, name='warehouse-dates-form'),
-    path('warehouse-dates/<int:item_id>/skip', views.WarehouseDateFormSkip, name='warehouse-dates-form-skip'),
+    path('warehouse-dates/<int:item_id>/<int:inventory_id>/skip', views.WarehouseDateFormSkip, name='warehouse-dates-form-skip'),
     path('warehouse-dates/<int:item_id>', views.WarehouseDateItemForm, name='warehouse-date-form'),
-    path('warehouse-dates/<int:item_id>/input', views.WarehouseDateItemInput, name='warehouse-date-input'),
+    path('warehouse-dates/<int:item_id>/<int:inventory_id>/input', views.WarehouseDateItemInput, name='warehouse-date-input'),
+
+    #Print pallet pages
+    path('warehouse/<int:route_id>/print/pallet/', views.PalletPages, name='print-pallet-pages'),
+    path('warehouse/<int:warehouse_id>/print/', views.PrintPalletPages, name='print-pallet-pages'),
 
 ]

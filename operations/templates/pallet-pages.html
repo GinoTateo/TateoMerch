@@ -20,18 +20,25 @@
 <main>
     <div class= "container">
         <div class="table-responsive text-nowrap">
-                {% if warehouse %}
+                {% if route %}
 
                               <div class="card-body">
                                 <h2 class="card-title">Warehouse {{ warehouse.number }}</h2>
                                 <p class="card-text">{{ warehouse.address }}</p>
-
-{#                                  <a type="button" href="/ops/warehouse/{{ warehouse.id }}/orderform" class="btn btn-outline-success">Order</a>#}
-                                  <a type="button" href="https://forms.office.com/pages/responsepage.aspx?id=JWwiTDq_UEGXCpp7Ec1w4PWkcr5jqrZFhAjKF0kY7DhUODBaUkZDUUFTN1VYRkQzSUE1QVZKQklTUyQlQCN0PWcu&origin=QRCode" target="_blank" class="btn btn-outline-success">Order</a>
+                                  <a type="button" href="/ops/warehouse/{{ warehouse.id }}/orderform" class="btn btn-outline-success">Order</a>
                                   <a type="button" href="/ops/warehouse/{{ warehouse.id }}/inventory" class="btn btn-outline-secondary">Inventory</a>
+                                    <a type="button" href="/ops/warehouse/{{ warehouse.id }}/inventory/physical" class="btn btn-outline-secondary">Physical Inventory</a>
                             </div>
 
+                    {% for page in pages %}
+                             <div class="card-body">
+                                <h5 class="card-text">RT {{ route }}</h5>
+                                    <a type="button" href="/ops/warehouse/{{ route.id }}/print/palletpages" class="btn btn-outline-success">Print</a>
 
+{#                                    <a type="button" href="/ops/warehouse/{{  }}/inventory" class="btn btn-outline-secondary">Inventory</a>#}
+{#                                    <a type="button" href="/ops/warehouse/{{ }}/inventory/physical" class="btn btn-outline-secondary">Physical Inventory</a>#}
+                            </div>
+                    {% endfor %}
 
                 {% endif %}
         </div>
@@ -39,4 +46,3 @@
 </main>
 
 {% endblock content %}
-
