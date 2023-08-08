@@ -1,6 +1,7 @@
 from django.db import models
 from django.urls import reverse
 
+import rsr.models
 from MerchManagerV1 import settings
 
 TYPE = (
@@ -26,13 +27,13 @@ SIZE = (
 
 
 class Item(models.Model):
-    item_brand = models.CharField(choices=BRAND, max_length=25, default='P')
-    item_type = models.CharField(choices=TYPE, max_length=25)
-    item_size = models.CharField(choices=SIZE, max_length=25)
-    item_name = models.CharField(max_length=100)
-    item_number = models.IntegerField(default=0)
-    item_date = models.DateField(blank=True, null=True)
-    cpc = models.IntegerField(blank=True, null=True)
+    item_brand          = models.CharField(choices=BRAND, max_length=25, default='P')
+    item_type           = models.CharField(choices=TYPE, max_length=25)
+    item_size           = models.CharField(choices=SIZE, max_length=25)
+    item_name           = models.CharField(max_length=100)
+    item_number         = models.IntegerField(default=0)
+    item_date           = models.DateField(blank=True, null=True)
+    cpc                 = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
         return self.item_name + ' ' + self.item_brand + self.item_type + self.item_size
@@ -55,11 +56,10 @@ class Item(models.Model):
 
 
 class OrderItem(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL,
-                             on_delete=models.CASCADE)
-    ordered = models.BooleanField(default=False)
-    item = models.ForeignKey(Item, on_delete=models.CASCADE)
-    quantity = models.IntegerField(default=1)
+    user                = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE)
+    ordered             = models.BooleanField(default=False)
+    item                = models.ForeignKey(Item, on_delete=models.CASCADE)
+    quantity            = models.IntegerField(default=1)
 
     def __str__(self):
         return f"{self.quantity} of {self.item.item_name}"
@@ -74,11 +74,11 @@ class OrderItem(models.Model):
 
 
 class Order(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    items = models.ManyToManyField(OrderItem)
-    start_date = models.DateTimeField(auto_now_add=True)
-    ordered_date = models.DateTimeField()
-    ordered = models.BooleanField(default=False)
+    user                = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    items               = models.ManyToManyField(OrderItem)
+    start_date          = models.DateTimeField(auto_now_add=True)
+    ordered_date        = models.DateTimeField()
+    ordered             = models.BooleanField(default=False)
 
     def __str__(self):
         return self.user.username
@@ -88,3 +88,34 @@ class Order(models.Model):
         for order_item in self.items.all():
             total += order_item.quantity
         return total
+
+
+class InventoryItem(models.Model):
+    item                = models.ForeignKey(Item, on_delete=models.CASCADE)
+    item_date           = models.DateField(blank=True, null=True)
+    total_quantity      = models.IntegerField(default=0)
+    pallet_quantity     = models.IntegerField(default=0)
+    each_quantity       = models.IntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.total_quantity} of {self.item.item_name}"
+
+
+class Inventory(models.Model):
+    items               = models.ManyToManyField(InventoryItem)
+    date                = models.DateTimeField(auto_now_add=True)
+    amount              = models.IntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.date}"
+
+
+class Warehouse(models.Model):
+    number              = models.IntegerField(default=000)
+    manager             = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    address             = models.TextField(default="N/A")
+    region              = models.IntegerField(default=0000)
+    inventory           = models.ManyToManyField(Inventory, blank=True, null=True)
+    routes              = models.ManyToManyField(rsr.models.Route, blank=True, null=True)
+
+

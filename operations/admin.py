@@ -1,9 +1,7 @@
 from datetime import datetime
-
 from django.contrib import admin
+from operations.models import Item, Order, Warehouse, Inventory, InventoryItem
 
-# Register your models here.
-from operations.models import Item, Order
 
 class EntryAdmin(admin.ModelAdmin):
     # Overide of the save model
@@ -17,3 +15,7 @@ class EntryAdmin(admin.ModelAdmin):
 
 admin.site.register(Item)
 admin.site.register(Order)
+admin.site.register(Warehouse)
+admin.site.register(Inventory)
+admin.site.register(InventoryItem)
+

@@ -29,6 +29,9 @@ urlpatterns = [
     path('rsr/', include('rsr.urls')),
     path('api/', include('api.urls')),
 
+    # Service & Pricing
+    path('service', views.service, name='service'),
+
     # Home
     path('', views.home, name='home'),
     path('home', views.home, name='home'),
@@ -42,7 +45,7 @@ urlpatterns = [
     # path('account/', views.account, name='account'),
 
     #
-    # path('accounts/login/', views.loginrequest, name='login'),
+    path('accounts/login/', views.login_view, name='login'),
     #
     # #
     # path('add/', views.add, name='index'),
