@@ -5,6 +5,7 @@ from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
+import cloudinary
 
 
 class MyAccountManager(BaseUserManager):
@@ -49,6 +50,7 @@ TITLE = (
     ('Merch', 'Merchandiser'),
     ('RM', 'Regional Manager'),
     ('DM', 'Division Manager'),
+    ('WHM', 'Warehouse Manager'),
 )
 
 
@@ -65,8 +67,8 @@ class Account(AbstractBaseUser):
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
-    profile_image = models.ImageField(max_length=255, upload_to=get_profile_image_filepath, null=True,
-                                      default=get_default_profile_image)
+    # profile_image = models.ImageField(max_length=255, upload_to=get_profile_image_filepath, null=True,
+    #                                   default=get_default_profile_image)
     hide_email = models.BooleanField(default=True)
     title = models.CharField(choices=TITLE, blank=True, max_length=30, default='')
 

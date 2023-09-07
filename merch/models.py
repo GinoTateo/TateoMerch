@@ -8,8 +8,6 @@ from django.shortcuts import redirect, reverse
 from datetime import datetime, timedelta
 
 from django.utils.timezone import now
-
-import account.models
 from operations.models import Item, OrderItem
 from rsr.models import Store, Route, StoreListItem
 

@@ -18,24 +18,44 @@
 {% block content %}
 
 <main>
-    <div class= "container">
-        <div class="table-responsive text-nowrap">
-                {% if warehouse %}
-
-                              <div class="card-body">
-                                <h2 class="card-title">Warehouse {{ warehouse.number }}</h2>
-                                <p class="card-text">{{ warehouse.address }}</p>
-
-{#                                  <a type="button" href="/ops/warehouse/{{ warehouse.id }}/orderform" class="btn btn-outline-success">Order</a>#}
-                                  <a type="button" href="https://forms.office.com/pages/responsepage.aspx?id=JWwiTDq_UEGXCpp7Ec1w4PWkcr5jqrZFhAjKF0kY7DhUODBaUkZDUUFTN1VYRkQzSUE1QVZKQklTUyQlQCN0PWcu&origin=QRCode" target="_blank" class="btn btn-outline-success">Order</a>
-                                  <a type="button" href="/ops/warehouse/{{ warehouse.id }}/inventory" class="btn btn-outline-secondary">Inventory</a>
-                                  <a type="button" href="/ops/warehouse/{{ warehouse.id }}/print" class="btn btn-outline-secondary">Print</a>
-                                  <a type="button" href="/ops/warehouse/{{ warehouse.id }}/inventory/physical" class="btn btn-outline-secondary">Physical Inventory</a>
-                            </div>
-
-                {% endif %}
+    <div class="container">
+        <div class="card-title">
+            {% if warehouse %}
+                <h1>Warehouse {{ warehouse.number }}</h1>
+            {% endif %}
         </div>
     </div>
+
+{% if orders %}
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-10">
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="card-title">Orders</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            {% for order in orders %}
+                <div class="col-lg-10">
+                    <div class="card">
+                        <div class="card-body">
+                            <h2 class="card-title">Route #{{ order.route }}</h2>
+                            <p class="card-text">Quantity: {{ order.get_total_quantity }}</p>
+                            <p class="card-text">Status: {{ order.status }}</p>
+                            <a href="order-status-update/{{ order.id}}/" class="btn btn-outline-success">Order Received</a>
+                            <a href="" class="btn btn-outline-warning">Print Pages</a>
+                            <a href="" class="btn btn-outline-warning">View Order</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endif %}
+
 </main>
 
 {% endblock content %}

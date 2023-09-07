@@ -49,7 +49,7 @@ class AccountUpdateForm(forms.ModelForm):
 
     class Meta:
         model = Account
-        fields = ('username', 'email', 'profile_image', 'hide_email' )
+        fields = ('username', 'email', 'hide_email' )
 
     def clean_email(self):
         email = self.cleaned_data['email'].lower()

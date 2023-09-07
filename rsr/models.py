@@ -120,6 +120,7 @@ class Route(models.Model):
     region = models.IntegerField(default='4208', blank=True)
     store = models.ManyToManyField(Store, blank=True)
 
+
     def __str__(self):
         return f'{self.number}'
 

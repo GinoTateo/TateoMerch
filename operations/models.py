@@ -1,7 +1,7 @@
 from django.db import models
 from django.urls import reverse
 
-import rsr.models
+from rsr.models import Route
 from MerchManagerV1 import settings
 
 TYPE = (
@@ -25,6 +25,11 @@ SIZE = (
     ('48', 'K-48'),
 )
 
+STATUS = (
+    ('R', 'Received'),
+    ('P', 'Preparing'),
+    ('S', 'Shipped'),
+)
 
 class Item(models.Model):
     item_brand          = models.CharField(choices=BRAND, max_length=25, default='P')
@@ -75,10 +80,12 @@ class OrderItem(models.Model):
 
 class Order(models.Model):
     user                = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    route               = models.ForeignKey(Route, blank=True, default=0, on_delete=models.CASCADE)
     items               = models.ManyToManyField(OrderItem)
     start_date          = models.DateTimeField(auto_now_add=True)
     ordered_date        = models.DateTimeField()
     ordered             = models.BooleanField(default=False)
+    status              = models.CharField(choices=STATUS, default="Pending", max_length=25)
 
     def __str__(self):
         return self.user.username
@@ -116,6 +123,6 @@ class Warehouse(models.Model):
     address             = models.TextField(default="N/A")
     region              = models.IntegerField(default=0000)
     inventory           = models.ManyToManyField(Inventory, blank=True, null=True)
-    routes              = models.ManyToManyField(rsr.models.Route, blank=True, null=True)
+    routes              = models.ManyToManyField(Route, blank=True, null=True)
 
 

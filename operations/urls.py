@@ -16,6 +16,7 @@ urlpatterns = [
     path('product/<pk>/', ProductView.as_view(), name='product'),
     path('orderform', login_required(orderForm.as_view()), name='order-form'),
 
+    # Order
     path('warehouse/<int:warehouse_id>/orderform', login_required(orderForm.as_view()), name='warehouse-orderform'),
     path('warehouse/<int:warehouse_id>/inventory', views.WarehouseDateItemView, name='warehouse-inventory'),
 
@@ -38,5 +39,7 @@ urlpatterns = [
     #Print pallet pages
     path('warehouse/<int:route_id>/print/pallet/', views.PalletPages, name='print-pallet-pages'),
     path('warehouse/<int:warehouse_id>/print/', views.PrintPalletPages, name='print-pallet-pages'),
+
+    path('warehouse/order-status-update/<int:order_id>/', views.WarehouseManagerOrderStatusUpdate, name='whmosu'),
 
 ]

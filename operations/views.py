@@ -349,5 +349,19 @@ def WarehousePhysicalInventory(request, item_id):
 def WarehouseManagerDetail(request, warehouse_id):
     warehouse = Warehouse.objects.get(id=warehouse_id)
     routes = warehouse.routes.all()
+    user = request.user
+    orders = Order.objects.all()
 
-    return render(request, 'warehouse_manager_detail.html', {'warehouse': warehouse, 'routes': routes})
+    return render(request, 'warehouse_manager_detail.html', {'warehouse': warehouse, 'routes': routes, 'user': user, 'orders': orders})
+
+def WarehouseManagerOrderStatusUpdate(request, order_id, status):
+    order = Order.objects.get(id=order_id)
+
+    if (status == "Pending"):
+        order.status = "Preparing"
+    if (status == "Preparing"):
+        order.status = "Shipped"
+    else:
+        order.status = "Pending"
+
+    return WarehouseManagerDetail()
