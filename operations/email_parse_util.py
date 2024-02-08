@@ -272,12 +272,3 @@ def check_and_parse_new_emails(email_address, email_password, client, db_name='m
 # Example usage
 # client = MongoClient('mongodb://localhost:27017/')  # or your MongoDB connection details
 # check_and_parse_new_emails('your_email@gmail.com', 'your_password', client)
-
-
-if __name__ == '__main__':
-    email = "GJTat901@gmail.com"
-    password = "xnva kbzm flsa szzo"
-    uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
-    client = MongoClient(uri)
-
-    check_and_parse_new_emails(email, password, client, 'mydatabase', 'orders')

@@ -29,9 +29,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', default='your secret key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ['127.0.0.1', 'tateomerch.onrender.com', 'TateoMerch.com', '192.168.5.58']
+ALLOWED_HOSTS = ['127.0.0.1', 'ShipTeo.onrender.com', 'ShipTeo.com', '']
 
 AUTH_USER_MODEL = "account.Account"
 # Application definition
