@@ -31,7 +31,8 @@ SECRET_KEY = os.environ.get('SECRET_KEY', default='your secret key')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'https://shipteo.onrender.com/', 'shipteo.onrender.com', 'shipteo.com', 'https://www.shipteo.com/', '*']
+ALLOWED_HOSTS = ['127.0.0.1', 'https://shipteo.onrender.com/', 'shipteo.onrender.com', 'shipteo.com',
+                 'https://www.shipteo.com/', '*']
 
 AUTH_USER_MODEL = "account.Account"
 # Application definition
@@ -105,7 +106,13 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    },
+    'mongoDB': {
+        "ENGINE": "djongo",
+        "CLIENT": {
+            "URI": "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
+        }
+    },
 }
 
 # Password validation
@@ -154,9 +161,9 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 cloudinary.config(
- cloud_name = os.environ.get('cloud_name', default='cloud_name'),
- api_key = os.environ.get('api_key', default='api_key'),
- api_secret = os.environ.get('api_secret', default='api_secret'),
+    cloud_name=os.environ.get('cloud_name', default='cloud_name'),
+    api_key=os.environ.get('api_key', default='api_key'),
+    api_secret=os.environ.get('api_secret', default='api_secret'),
 )
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -175,5 +182,3 @@ MESSAGE_TAGS = {
     messages.WARNING: 'alert-warning',
     messages.ERROR: 'alert-danger',
 }
-
-
