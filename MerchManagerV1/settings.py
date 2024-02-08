@@ -31,7 +31,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', default='your secret key')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['127.0.0.1', 'https://shipteo.onrender.com/', 'https://www.shipteo.com/', '*']
+ALLOWED_HOSTS = ['127.0.0.1', 'https://shipteo.onrender.com/', 'shipteo.onrender.com', 'shipteo.com', 'https://www.shipteo.com/', '*']
 
 AUTH_USER_MODEL = "account.Account"
 # Application definition
@@ -106,15 +106,6 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
-    # 'mongodb': {
-    #     'ENGINE': 'djongo',
-    #     'NAME': 'mydatabase',
-    #     'ENFORCE_SCHEMA': False,
-    #     'CLIENT': {
-    #         'host': 'mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority',
-    #         # e.g., 'mongodb://username:password@host:port'
-    #     }
-    # }
 }
 
 # Password validation
