@@ -54,8 +54,10 @@
     </style>
 </head>
 
+{% extends 'navbar.html' %}
+{% block content %}
+
 <body>
-    {% include "Navbar.html" %}
     <main class="container">
 
 
@@ -99,5 +101,7 @@
         }
     </script>
 </body>
+
+{% endblock %}
 
 </html>
