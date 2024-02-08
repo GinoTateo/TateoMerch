@@ -33,4 +33,33 @@
     -webkit-background-clip: text;
 }
 
+body {
+    background: url('../images/wallpaper.jpg') no-repeat center center fixed;
+    background-size: cover;
+}
 
+.card-back {
+    background: url('../images/boxpaper2.svg') no-repeat;
+    background-size: cover;
+}
+
+.card-back2 {
+    background: url('../images/boxpaper3.svg') no-repeat;
+    background-size: cover;
+}
+
+    .uniform-btn {
+        width: 150px; /* Set a fixed width */
+    }
+    .description {
+        display: inline-block;
+        margin-left: 10px; /* Add some space between the button and the text */
+    }
+
+        .input-like {
+            border: 1px solid #ccc;
+            padding: 5px;
+            border-radius: 0.25rem;
+            display: inline-block;
+            width: 100%;
+        }

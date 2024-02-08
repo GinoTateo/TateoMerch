@@ -1,11 +1,9 @@
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
-from django.core.files import images
 from django.db import models
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
-import cloudinary
 
 
 class MyAccountManager(BaseUserManager):
@@ -57,8 +55,8 @@ TITLE = (
 class Account(AbstractBaseUser):
     email = models.EmailField(verbose_name="email", max_length=60, unique=True)
     username = models.CharField(max_length=30, unique=True)
-    first_name = models.CharField(max_length=30, blank=True, null=True,)
-    last_name = models.CharField(max_length=30, blank=True, null=True,)
+    first_name = models.CharField(max_length=30, blank=True, null=True, )
+    last_name = models.CharField(max_length=30, blank=True, null=True, )
     route_number = models.IntegerField(default=0, max_length=10, blank=True, null=True)
     region_number = models.IntegerField(default=0, max_length=10, blank=True, null=True)
     date_joined = models.DateTimeField(verbose_name="date joined", auto_now_add=True)

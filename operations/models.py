@@ -26,9 +26,9 @@ SIZE = (
 )
 
 STATUS = (
-    ('R', 'Received'),
-    ('P', 'Preparing'),
-    ('S', 'Shipped'),
+    ('Received', 'Received'),
+    ('Preparing', 'Preparing'),
+    ('Shipping', 'Shipping'),
 )
 
 class Item(models.Model):
@@ -83,7 +83,7 @@ class Order(models.Model):
     route               = models.ForeignKey(Route, blank=True, default=0, on_delete=models.CASCADE)
     items               = models.ManyToManyField(OrderItem)
     start_date          = models.DateTimeField(auto_now_add=True)
-    ordered_date        = models.DateTimeField()
+    ship_date        = models.DateTimeField()
     ordered             = models.BooleanField(default=False)
     status              = models.CharField(choices=STATUS, default="Pending", max_length=25)
 
@@ -126,3 +126,8 @@ class Warehouse(models.Model):
     routes              = models.ManyToManyField(Route, blank=True, null=True)
 
 
+class OutOfStockItem(models.Model):
+    item_number = models.CharField(max_length=100, unique=True, help_text="The unique item number for the OOS item")
+
+    def __str__(self):
+        return self.item_number

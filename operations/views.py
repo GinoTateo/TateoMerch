@@ -1,10 +1,13 @@
+from bson import ObjectId
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 from django.views.generic import DetailView, ListView
+from pymongo import MongoClient
+from reportlab.lib.pagesizes import letter
 from rest_framework.filters import BaseFilterBackend
 
 import rsr.models
@@ -12,7 +15,20 @@ from account.models import Account
 # from operations.filters import ItemFilter
 from operations.filters import ItemFilter
 from operations.forms import WarehouseForm, palletForm
-from operations.models import Item, Order, OrderItem, Warehouse, Inventory, InventoryItem
+from operations.models import Item, Order, OrderItem, Warehouse, Inventory, InventoryItem, OutOfStockItem
+
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from bson import ObjectId
+from django.http import HttpResponse
+
+from . import email_parse_util
+
+
+# Assuming this function is correctly getting MongoDB client and fetching data
+def get_mongodb_client():
+    # Return a MongoClient instance connected to your database
+    pass
 
 
 class ProductView(DetailView):
@@ -26,6 +42,18 @@ def OrderSummaryView(request):
     # user = get_object_or_404(User, username=current_user)
     user = Account.objects.get(username=request.user)
     order = Order.objects.filter(user=user)
+    context = {
+        'object': order
+    }
+
+    return render(request, 'order_summary.html', context)
+
+
+@login_required
+def OrderSummaryViewWithID(request, order_id):
+    # current_user = request.user
+    # user = get_object_or_404(User, username=current_user)
+    order = Order.objects.filter(id=order_id)
     context = {
         'object': order
     }
@@ -227,11 +255,8 @@ def WarehouseDateItemInput(request, item_id, inventory_id):
                 item_date=date,
             )
 
-
             inventory.items.add(add_item)
             inventory.save()
-
-
 
             items = Item.objects.filter(Q(item_type='G') | Q(item_type='W'))
             last_item = items.last()
@@ -275,7 +300,7 @@ def WarehouseDateFormSkip(request, item_id, inventory_id):
     last_item = items.last()
 
     if item.pk is last_item.pk:
-        return render(request, "warehouse_dates.html", {'items': items,'inventory': inventory})
+        return render(request, "warehouse_dates.html", {'items': items, 'inventory': inventory})
 
     return render(request, "item_date_form.html", {'form': form, 'item': item, 'inventory': inventory})
 
@@ -345,6 +370,7 @@ def PrintPalletPages(request, warehouse_id):
 def WarehousePhysicalInventory(request, item_id):
     return render(request, 'item_date_form.html', {'form': form})
 
+
 @login_required
 def WarehouseManagerDetail(request, warehouse_id):
     warehouse = Warehouse.objects.get(id=warehouse_id)
@@ -352,16 +378,203 @@ def WarehouseManagerDetail(request, warehouse_id):
     user = request.user
     orders = Order.objects.all()
 
-    return render(request, 'warehouse_manager_detail.html', {'warehouse': warehouse, 'routes': routes, 'user': user, 'orders': orders})
+    return render(request, 'warehouse_manager_detail.html',
+                  {'warehouse': warehouse, 'routes': routes, 'user': user, 'orders': orders})
 
-def WarehouseManagerOrderStatusUpdate(request, order_id, status):
+
+def WarehouseManagerOrderStatusUpdate(request, order_id):
     order = Order.objects.get(id=order_id)
 
-    if (status == "Pending"):
-        order.status = "Preparing"
-    if (status == "Preparing"):
-        order.status = "Shipped"
-    else:
-        order.status = "Pending"
+    if request.method == 'POST':
+        # Access form input data
+        order_status = request.POST.get('orderStatus')
+        quantity = request.POST.get('quantity')
+        order.status = order_status
+        order.save()
 
-    return WarehouseManagerDetail()
+    return WarehouseManagerOrderStatusDetail(request, order_id)
+
+
+def WarehouseManagerOrderStatusView(request):
+    orders = Order.objects.all()
+
+    return render(request, 'OrderStatusView.html', {'orders': orders})
+
+
+def WarehouseManagerOrderStatusDetail(request, order_id):
+    order = Order.objects.get(id=order_id)
+
+    return render(request, 'OrderStatusDetail.html', {'order': order})
+
+
+from django.shortcuts import render
+from .mongodb_utils import get_orders_from_mongodb, \
+    get_mongodb_client  # Adjust the import path based on your project structure
+
+
+def orders_view(request):
+
+    email = "GJTat901@gmail.com"
+    password = "xnva kbzm flsa szzo"
+    uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
+    client = MongoClient(uri)
+
+    email_parse_util.check_and_parse_new_emails(email, password, client, 'mydatabase', 'orders')
+
+    uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
+    client = MongoClient(uri)
+    db = client['mydatabase']
+    collection = db['orders']
+
+    orders = list(collection.find())
+
+    # Renaming '_id' field to 'order_id' for each order
+    for order in orders:
+        order['order_id'] = str(order['_id'])  # Convert ObjectId to string
+        del order['_id']
+
+    orders.reverse()
+
+    # You can now pass these orders to your template or process them further
+    return render(request, 'mongoOrdersInOrder.html', {'orders': orders})
+
+
+def order_detail_view(request, order_id):
+    # Directly create a MongoDB client instance
+    try:
+        uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
+        client = MongoClient(uri)
+        db = client['mydatabase']
+        collection = db['orders']
+        order = collection.find_one({'_id': ObjectId(order_id)})
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        # Optionally, return an error response or handle the error as appropriate
+        return HttpResponse("Error connecting to database", status=500)
+
+    collection = db['orders']
+
+    order = collection.find_one({'_id': ObjectId(order_id)})
+
+    #Fetch OOS
+    OOS_items = OutOfStockItem.objects.all().values_list('item_number', flat=True)
+    OOS = list(OOS_items)
+
+    # Reformat the orders array and check stock status
+    if order and 'orders' in order:
+        reformatted_orders = []
+        for item in order['orders']:
+            item_number = item.get('Item Number', '')
+            in_stock = item_number not in OOS
+
+            reformatted_item = {
+                'ItemNumber': item_number,
+                'ItemDescription': item.get('Item Description', ''),
+                'Quantity': item.get('Quantity', ''),
+                'InStock': in_stock
+            }
+            reformatted_orders.append(reformatted_item)
+        order['orders'] = reformatted_orders
+
+    client.close()
+    return render(request, 'order_detail.html', {'order': order})
+
+
+def generate_order_pdf(request, order_id):
+    uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
+    client = MongoClient(uri)
+    db = client['mydatabase']
+    collection = db['orders']
+
+    #Fetch OOS
+    OOS_items = OutOfStockItem.objects.all().values_list('item_number', flat=True)
+    OOS = list(OOS_items)
+
+    order = collection.find_one({'_id': ObjectId(order_id)})
+    client.close()
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="order_{order_id}.pdf"'
+
+    p = canvas.Canvas(response, pagesize=letter)
+    width, height = letter
+
+    # Initialize totals
+    total_quantity = 0
+    adjusted_total_quantity = 0
+
+    # Calculate totals
+    for item in order.get('orders', []):
+        quantity = int(item.get('Quantity', 0))
+        total_quantity += quantity
+        if item.get('Item Number', '') not in OOS:
+            adjusted_total_quantity += quantity
+
+    # Header setup with bold font
+    # Set font to Helvetica-Bold for headers
+    p.drawString(30, height - 30, "Pick List")
+    p.drawString(30, height - 50, f"Route Number: {order.get('route', 'N/A')}")
+    p.drawString(30, height - 70, f"Date: {order.get('date', 'N/A')}")
+    p.drawString(30, height - 90, f"Total Quantity Ordered: {total_quantity}")
+    p.drawString(30, height - 110, f"Adjusted Total (In Stock): {adjusted_total_quantity}")
+    p.drawString(30, height - 130, "Scan Count:")
+    p.rect(110, height - 132, 50, 15)  # Scan count box
+
+
+
+    # Starting position adjustment for item list
+    y_position = height - 160
+
+    p.setFont("Helvetica-Bold", 12)
+    # Column headers
+    p.drawString(30, y_position, "Item Number")
+    p.drawString(150, y_position, "Description")
+    p.drawString(350, y_position, "Quantity")
+    p.drawString(450, y_position, "")  # Adjustment quantity column
+    p.drawString(530, y_position, "Stock Status")
+    p.drawString(630, y_position, "Check")  # Checkboxes moved to the far right
+
+    # Revert to normal font for item details
+    p.setFont("Helvetica", 12)
+
+    # Adjust y_position for first item row
+    y_position -= 20
+
+    for item in order.get('orders', []):
+
+        # Draw a line to separate this item from the next
+        p.line(30, y_position - 2, 580, y_position - 2)  # Adjust line length as needed
+
+        item_number = item.get('Item Number', 'Unknown')
+        description = item.get('Item Description', 'N/A')
+        quantity = item.get('Quantity', 0)
+        stock_status = "IS" if item_number not in OOS else "OOS"
+
+        # Drawing item details (keep this part unchanged)
+        p.drawString(30, y_position, str(item_number))
+        p.drawString(150, y_position, description)
+        p.drawString(350, y_position, str(quantity))
+
+        # If the item is out of stock, cross out the quantity
+        if stock_status == "OOS":
+            # Calculate width of the quantity text for precise line drawing
+            quantity_text_width = p.stringWidth(str(quantity), "Helvetica", 12)
+            # Draw a line through the quantity text
+            p.line(350, y_position + 4, 350 + quantity_text_width, y_position + 4)
+
+        # Draw the placeholder box for adjustment quantity, stock status, and checkbox
+        p.rect(450, y_position - 2, 30, 15)  # Placeholder box for adjustment quantity
+        p.drawString(530, y_position, stock_status)  # Include stock status
+        p.rect(630, y_position - 2, 12, 12, stroke=1, fill=0)  # Checkbox
+
+        # Move to the next line
+        y_position -= 20
+
+        # Check if we need to start a new page
+        if y_position < 50:
+            p.showPage()
+            y_position = height - 50
+
+    p.showPage()
+    p.save()
+    return response

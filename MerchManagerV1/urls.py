@@ -24,7 +24,7 @@ urlpatterns = [
     # app patterns
     path('admin/', admin.site.urls),
     path('account/', include('account.urls')),
-    path('merch/', include('merch.urls')),
+    # path('merch/', include('merch.urls')), Branched into its own plateform
     path('ops/', include('operations.urls')),
     path('rsr/', include('rsr.urls')),
     path('api/', include('api.urls')),

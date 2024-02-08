@@ -1,6 +1,6 @@
 from datetime import datetime
 from django.contrib import admin
-from operations.models import Item, Order, Warehouse, Inventory, InventoryItem, OrderItem
+from operations.models import Item, Order, Warehouse, Inventory, InventoryItem, OrderItem, OutOfStockItem
 
 
 class EntryAdmin(admin.ModelAdmin):
@@ -19,4 +19,5 @@ admin.site.register(OrderItem)
 admin.site.register(Warehouse)
 admin.site.register(Inventory)
 admin.site.register(InventoryItem)
+admin.site.register(OutOfStockItem)
 

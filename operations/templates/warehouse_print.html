@@ -18,19 +18,17 @@
 {% block content %}
 
 
-    <main>
-    <div class= "container">
-        <div class="table-responsive text-nowrap">
+<main class="container my-4">
+    <div class="row">
+        <div class="col-md-12">
+
+        <a type="button" onclick="history.back()" class="btn btn-secondary mb-3">Back</a>
             {% if warehouse %}
 
+            <div class="card">
                   <div class="card-body">
                     <h2 class="card-title">Warehouse {{ warehouse.number }}</h2>
                     <p class="card-text">{{ warehouse.address }}</p>
-
-                      <a type="button" href="/ops/warehouse/{{ warehouse.id }}/orderform" class="btn btn-outline-success">Order</a>
-                      <a type="button" href="/ops/warehouse/{{ warehouse.id }}/print" class="btn btn-outline-secondary">Print</a>
-                      <a type="button" href="/ops/warehouse/{{ warehouse.id }}/inventory" class="btn btn-outline-secondary">Inventory</a>
-                      <a type="button" href="/ops/warehouse/{{ warehouse.id }}/inventory/physical" class="btn btn-outline-secondary">Physical Inventory</a>
                   </div>
 
                  {% for route in routes %}
@@ -47,6 +45,7 @@
                         </form>
                      </div>
                 {% endfor %}
+            </div>
             {% endif %}
         </div>
     </div>

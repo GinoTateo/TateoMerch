@@ -19,10 +19,12 @@ urlpatterns = [
     # Order
     path('warehouse/<int:warehouse_id>/orderform', login_required(orderForm.as_view()), name='warehouse-orderform'),
     path('warehouse/<int:warehouse_id>/inventory', views.WarehouseDateItemView, name='warehouse-inventory'),
-
     path('warehouse/<int:warehouse_id>/inventory/physical', views.WarehouseDateForm, name='warehouse-physical-inventory'),
+    path('warehouse/orders', views.orders_view, name='orderview'),
+    path('warehouse/order/<str:order_id>/', views.order_detail_view, name='detail_view'),
 
     path('order-summary', views.OrderSummaryView, name='order-summary'),
+    path('order-summary/<int:order_id>', views.OrderSummaryViewWithID, name='order-summary'),
     path('data/<int:item_id>', views.ItemData, name='item-data'),
 
     path('dashboard/', views.WarehouseDashboard, name='warehouse-dash'),
@@ -40,6 +42,9 @@ urlpatterns = [
     path('warehouse/<int:route_id>/print/pallet/', views.PalletPages, name='print-pallet-pages'),
     path('warehouse/<int:warehouse_id>/print/', views.PrintPalletPages, name='print-pallet-pages'),
 
-    path('warehouse/order-status-update/<int:order_id>/', views.WarehouseManagerOrderStatusUpdate, name='whmosu'),
-
+    #Order_Status
+    path('warehouse/order-status-update/<int:order_id>/update', views.WarehouseManagerOrderStatusUpdate, name='whmosu'),
+    path('warehouse/order-status-view/', views.WarehouseManagerOrderStatusView, name='whmosv'),
+    path('warehouse/order-status-view/<int:order_id>/', views.WarehouseManagerOrderStatusDetail, name='whmosv'),
+    path('warehouse/order/<str:order_id>/pdf/', views.generate_order_pdf, name='generate_order_pdf'),
 ]
