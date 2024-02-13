@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+{% load static %}
 
 <head>
     <meta charset="UTF-8">
@@ -74,7 +75,17 @@
 {#            <label>Adjusted Case Count: <input type="number" placeholder="0"></label>#}
 {#        </div>#}
         <h3>Route Number: {{ order.route }} - {{ order.date|date:"M. d, Y" }} </h3>
-    <a href="pdf/" class="button" target="_blank">Print Order</a>
+
+    <a href="/ops/warehouse/orders" class="button bg-dark" >Back</a>
+    <a href="pdf/" class="button" >Print Order</a>
+
+    {% if order.status != "Complete" %}
+
+        <a href="complete" class="button bg-success" >Complete</a>
+
+    {% endif %}
+
+
 
         <section class="pick-list">
             {% for item in order.orders %}
@@ -98,6 +109,10 @@
     <script>
         function printPage() {
             window.print();
+        }
+
+        function completeOrder() {
+
         }
     </script>
 </body>

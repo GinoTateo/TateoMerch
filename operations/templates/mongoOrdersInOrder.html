@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+{% load static %}
 
 <head>
     <meta charset="UTF-8">
@@ -29,6 +30,12 @@
             text-decoration: none;
             border-radius: 5px;
         }
+        .status-complete {
+        color: green;
+        }
+        .status-received {
+        color: yellow;
+        }
     </style>
 </head>
 
@@ -45,7 +52,9 @@
                     <p>Route Number: {{ order.route }} </p>
                     <p>Date: {{ order.date|date:"Y-m-d" }}</p>
                     <p>Total Items: {{ order.orders|length }}</p>
-                    <a href="order/{{ order.order_id }}/" class="button" target="_blank">View Details</a>
+                    <p>Status: <span style="{% if order.status == 'Complete' %}color: green;{% else %}color: darkorange;{% endif %}">{{ order.status }}</span></p>
+
+                    <a href="order/{{ order.order_id }}/" class="button" >View Details</a>
                 </div>
             </article>
             {% endfor %}

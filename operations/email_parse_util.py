@@ -1,6 +1,5 @@
 import imaplib
 import email as email_lib
-import re
 from pymongo import MongoClient
 from datetime import datetime
 
@@ -47,9 +46,11 @@ def fetch_last_email_content(email_address, password):
 # Example usage
 # email_content = fetch_last_email_content('your_email@gmail.com', 'your_password')
 
+
 def parse_email(raw_email_content):
     """
     Parses the raw content of an email, handles forwarded emails, and extracts specific data points and order details.
+    Adjusted to handle multi-line item details format.
 
     :param raw_email_content: The raw email content.
     :return: A dictionary containing the extracted data points and order details.
@@ -78,18 +79,6 @@ def parse_email(raw_email_content):
         except UnicodeDecodeError:
             return payload.decode('ISO-8859-1')  # Fallback decoding
 
-    def is_forwarded_line(line):
-        patterns = [
-            r"Forwarded message",
-            r"Begin forwarded message",
-            r"^From:",
-            r"^Sent:",
-            r"^To:",
-            r"Original Message",
-            r"^\-\- Forwarded message \-\-$"
-        ]
-        return any(re.search(pattern, line) for pattern in patterns)
-
     # Extract the body of the email
     body = ''
     if email_message.is_multipart():
@@ -101,51 +90,47 @@ def parse_email(raw_email_content):
         body = decode_payload(email_message.get_payload(decode=True))
 
     # Parsing the body for the specific data points and order form
-    original_email_started = False
-    order_table_started = False
-    item_lines = []
-    found_quantity_header = False
+    capturing_items = False
+    item_buffer = []  # Temporary buffer to hold multi-line item details
 
     for line in body.splitlines():
-        if is_forwarded_line(line):
-            original_email_started = True
-            continue
-        if original_email_started:
-            # Check for and extract key data points
-            for key in extracted_data:
-                if line.startswith(key) and not order_table_started:
-                    extracted_data[key] = line.split(':', 1)[1].strip()
-
-            # Check for the start of the order table
-            if line.startswith("Item Number"):
-                order_table_started = True
+        line = line.strip()
+        if not capturing_items:
+            # Check for and extract key data points before items
+            if ":" in line:
+                key, value = line.split(':', 1)
+                if key in extracted_data:
+                    extracted_data[key] = value.strip()
+            if "Quantity" in line:
+                capturing_items = True  # Start capturing items after this line
                 continue
+        else:
+            # Handle item details spread across multiple lines
+            if line:  # Ensure line is not empty
+                # Check for the end of item details or start of additional information
+                if "Additional Items Needed" in line or line.startswith("Item Number"):
+                    # Process buffered item details
+                    if len(item_buffer) == 3:  # Assuming item details are complete
+                        extracted_data['Order Details'].append({
+                            'Item Number': item_buffer[0],
+                            'Item Description': item_buffer[1],
+                            'Quantity': item_buffer[2]
+                        })
+                    item_buffer.clear()  # Reset buffer for the next item
+                    if "Additional Items Needed" in line:
+                        break  # Stop capturing after this line
+                else:
+                    # Continue buffering item details
+                    item_buffer.append(line)
+                    if len(item_buffer) == 3:  # Assuming item details are complete
+                        extracted_data['Order Details'].append({
+                            'Item Number': item_buffer[0],
+                            'Item Description': item_buffer[1],
+                            'Quantity': item_buffer[2]
+                        })
+                        item_buffer.clear()  # Prepare for next item
 
-            # Check for the end of the order table
-            if "Additional Items Needed" in line:
-                break
-
-            # Detect the 'Quantity' header to start processing items
-            if order_table_started and "Quantity" in line:
-                found_quantity_header = True
-                continue
-
-            # Collect lines for the order table
-            if found_quantity_header and line.strip():
-                item_lines.append(line.strip())
-
-    # Process the collected item lines
-    for i in range(0, len(item_lines), 3):
-        try:
-            extracted_data['Order Details'].append({
-                'Item Number': item_lines[i],
-                'Item Description': item_lines[i + 1],
-                'Quantity': item_lines[i + 2]
-            })
-        except IndexError:
-            break  # In case the list of items does not divide evenly by 3
-
-    # Print and return the extracted data
+    # Debugging print of the extracted data
     for key, value in extracted_data.items():
         if key != 'Order Details':
             print(f"{key}: {value}")
@@ -162,7 +147,8 @@ def parse_email(raw_email_content):
 # parsed_data = parse_email(raw_email_content)
 
 
-def insert_order_into_mongodb(extracted_data, client, db_name='mydatabase', orders_collection='orders', status_collection='status'):
+def insert_order_into_mongodb(extracted_data, client, db_name='mydatabase', orders_collection='orders',
+                              status_collection='status'):
     """
     Inserts the order details into a MongoDB collection, organized by date and route.
 
@@ -252,6 +238,7 @@ def fetch_unread_emails(email_address, password):
     mail.close()
     mail.logout()
     return emails
+
 
 def check_and_parse_new_emails(email_address, email_password, client, db_name='mydatabase', orders_collection='orders'):
     """

@@ -47,4 +47,5 @@ urlpatterns = [
     path('warehouse/order-status-view/', views.WarehouseManagerOrderStatusView, name='whmosv'),
     path('warehouse/order-status-view/<int:order_id>/', views.WarehouseManagerOrderStatusDetail, name='whmosv'),
     path('warehouse/order/<str:order_id>/pdf/', views.generate_order_pdf, name='generate_order_pdf'),
+    path('warehouse/order/<str:order_id>/complete/', views.complete_order, name='complete_order'),
 ]

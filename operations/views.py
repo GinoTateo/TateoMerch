@@ -408,9 +408,6 @@ def WarehouseManagerOrderStatusDetail(request, order_id):
 
 
 from django.shortcuts import render
-from .mongodb_utils import get_orders_from_mongodb, \
-    get_mongodb_client  # Adjust the import path based on your project structure
-
 
 def orders_view(request):
 
@@ -437,6 +434,41 @@ def orders_view(request):
 
     # You can now pass these orders to your template or process them further
     return render(request, 'mongoOrdersInOrder.html', {'orders': orders})
+
+from pymongo import MongoClient
+from bson.objectid import ObjectId
+from django.http import HttpResponse
+from django.shortcuts import render
+
+def complete_order(request, order_id):
+    try:
+        uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
+        client = MongoClient(uri)
+        db = client['mydatabase']
+        collection = db['orders']
+
+        # Update the order's status to "Complete"
+        result = collection.update_one(
+            {'_id': ObjectId(order_id)},
+            {'$set': {'status': "Complete"}}
+        )
+
+        # Check if the order was successfully updated
+        if result.matched_count == 0:
+            # No order was found with the provided ID
+            print("No order found with the specified ID.")
+            client.close()
+            return HttpResponse("Order not found", status=404)
+
+        # Retrieve the updated order for rendering
+        order = collection.find_one({'_id': ObjectId(order_id)})
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        client.close()
+        return HttpResponse("Error connecting to database", status=500)
+
+    client.close()
+    return render(request, 'order_detail.html', {'order': order})
 
 
 def order_detail_view(request, order_id):
@@ -490,6 +522,12 @@ def generate_order_pdf(request, order_id):
     OOS_items = OutOfStockItem.objects.all().values_list('item_number', flat=True)
     OOS = list(OOS_items)
 
+    ship_to_routes = [
+        "RTC000003", "RTC000013", "RTC000018", "RTC000019", "RTC000089",
+        "RTC000377", "RTC000379", "RTC000649", "RTC000700", "RTC000719"
+    ]
+
+
     order = collection.find_one({'_id': ObjectId(order_id)})
     client.close()
 
@@ -513,10 +551,17 @@ def generate_order_pdf(request, order_id):
     # Header setup with bold font
     # Set font to Helvetica-Bold for headers
     p.drawString(30, height - 30, "Pick List")
-    p.drawString(30, height - 50, f"Route Number: {order.get('route', 'N/A')}")
-    p.drawString(30, height - 70, f"Date: {order.get('date', 'N/A')}")
+    p.setFont("Helvetica-Bold", 12)
+    route_number = order.get('route', 'N/A')
+    route_type = "Ship-to" if route_number in ship_to_routes else "Pick-up"
+    p.drawString(30, height - 50, f"Route Number: {route_number} ({route_type})")
+    p.setFont("Helvetica", 12)
+
+    formatted_date = order.get('date', 'N/A').strftime('%m/%d/%Y') if order.get('date') else 'N/A'
+    p.drawString(30, height - 70, f"Date: {formatted_date}")
     p.drawString(30, height - 90, f"Total Quantity Ordered: {total_quantity}")
-    p.drawString(30, height - 110, f"Adjusted Total (In Stock): {adjusted_total_quantity}")
+    p.drawString(30, height - 110, f"Adjusted Total: {adjusted_total_quantity} +/- ")
+    p.rect(160, height - 112, 25, 15)  # Scan count box
     p.drawString(30, height - 130, "Scan Count:")
     p.rect(110, height - 132, 50, 15)  # Scan count box
 
