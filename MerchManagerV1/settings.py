@@ -32,7 +32,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', default='your secret key')
 DEBUG = False
 
 ALLOWED_HOSTS = ['127.0.0.1', 'https://shipteo.onrender.com/', 'shipteo.onrender.com', 'shipteo.com',
-                 'https://www.shipteo.com/', '*']
+                 'https://www.shipteo.com/', 'www.shipteo.com']
 
 AUTH_USER_MODEL = "account.Account"
 # Application definition
@@ -101,7 +101,6 @@ WSGI_APPLICATION = 'MerchManagerV1.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
-# uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -110,7 +109,7 @@ DATABASES = {
     'orders': {
         "ENGINE": "djongo",
         "CLIENT": {
-            "URI": "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
+            "URI": os.environ.get('DJONGO_URI', default='URI')
         }
     },
 }

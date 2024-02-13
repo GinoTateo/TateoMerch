@@ -409,8 +409,8 @@ def WarehouseManagerOrderStatusDetail(request, order_id):
 
 from django.shortcuts import render
 
-def orders_view(request):
 
+def orders_view(request):
     email = "GJTat901@gmail.com"
     password = "xnva kbzm flsa szzo"
     uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
@@ -435,10 +435,12 @@ def orders_view(request):
     # You can now pass these orders to your template or process them further
     return render(request, 'mongoOrdersInOrder.html', {'orders': orders})
 
+
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 from django.http import HttpResponse
 from django.shortcuts import render
+
 
 def complete_order(request, order_id):
     try:
@@ -488,7 +490,7 @@ def order_detail_view(request, order_id):
 
     order = collection.find_one({'_id': ObjectId(order_id)})
 
-    #Fetch OOS
+    # Fetch OOS
     OOS_items = OutOfStockItem.objects.all().values_list('item_number', flat=True)
     OOS = list(OOS_items)
 
@@ -518,7 +520,7 @@ def generate_order_pdf(request, order_id):
     db = client['mydatabase']
     collection = db['orders']
 
-    #Fetch OOS
+    # Fetch OOS
     OOS_items = OutOfStockItem.objects.all().values_list('item_number', flat=True)
     OOS = list(OOS_items)
 
@@ -526,7 +528,6 @@ def generate_order_pdf(request, order_id):
         "RTC000003", "RTC000013", "RTC000018", "RTC000019", "RTC000089",
         "RTC000377", "RTC000379", "RTC000649", "RTC000700", "RTC000719"
     ]
-
 
     order = collection.find_one({'_id': ObjectId(order_id)})
     client.close()
@@ -564,8 +565,6 @@ def generate_order_pdf(request, order_id):
     p.rect(160, height - 112, 25, 15)  # Scan count box
     p.drawString(30, height - 130, "Scan Count:")
     p.rect(110, height - 132, 50, 15)  # Scan count box
-
-
 
     # Starting position adjustment for item list
     y_position = height - 160
