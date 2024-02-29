@@ -76,6 +76,7 @@
         <h3>Route Number: {{ order.route }} - {{ order.date|date:"M. d, Y" }} </h3>
 
     <a href="/ops/warehouse/orders" class="button bg-dark" >Back</a>
+    <a href="verify/" class="button" >Verify</a>
     <a href="pdf/" class="button" >Print Order</a>
 
     {% if order.status != "Complete" %}

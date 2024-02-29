@@ -54,7 +54,8 @@
                     <p>Total Items: {{ order.orders|length }}</p>
                     <p>Status: <span style="{% if order.status == 'Complete' %}color: green;{% else %}color: darkorange;{% endif %}">{{ order.status }}</span></p>
 
-                    <a href="order/{{ order.order_id }}/" class="button" >View Details</a>
+                    <a href="./order/{{ order.order_id }}/" class="button" >View Details</a>
+                    <a href="order/{{ order.order_id }}/complete/" class="button" >Complete</a>
                 </div>
             </article>
             {% endfor %}

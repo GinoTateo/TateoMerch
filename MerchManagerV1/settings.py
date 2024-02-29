@@ -19,6 +19,8 @@ from django.contrib.messages import constants as messages
 from cloudinary.uploader import upload
 from cloudinary.utils import cloudinary_url
 
+from operations.templatetags import custom_filters
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -30,7 +32,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', default='your secret key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.0.1', 'https://shipteo.onrender.com/', 'shipteo.onrender.com', 'shipteo.com',
                  'https://www.shipteo.com/', 'www.shipteo.com']
@@ -192,3 +194,7 @@ MESSAGE_TAGS = {
     messages.WARNING: 'alert-warning',
     messages.ERROR: 'alert-danger',
 }
+
+
+# def MONGO_URI():
+    # return "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"

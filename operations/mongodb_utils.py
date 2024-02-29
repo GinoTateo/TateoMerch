@@ -26,3 +26,13 @@ def get_orders_from_mongodb(db_name='mydatabase', collection_name='orders'):
 
     client.close()
     return orders
+
+
+def get_inventory_items():
+    uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
+    client = MongoClient(uri)
+    db = client['mydatabase']
+    collection = db['inventory']
+
+    items = collection.find({})
+    return list(items)

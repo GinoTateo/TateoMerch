@@ -1,28 +1,27 @@
-from bson import ObjectId
+from _pydecimal import getcontext
+
+import pandas as pd
+from django import template
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import HttpResponseRedirect, JsonResponse, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
+from django.views.decorators.http import require_http_methods
 from django.views.generic import DetailView, ListView
-from pymongo import MongoClient
-from reportlab.lib.pagesizes import letter
-from rest_framework.filters import BaseFilterBackend
-
+from bson import json_util
+import json
 import rsr.models
+from MerchManagerV1 import settings
 from account.models import Account
-# from operations.filters import ItemFilter
 from operations.filters import ItemFilter
-from operations.forms import WarehouseForm, palletForm
+from operations.forms import WarehouseForm
 from operations.models import Item, Order, OrderItem, Warehouse, Inventory, InventoryItem, OutOfStockItem
-
 from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-from bson import ObjectId
-from django.http import HttpResponse
-
 from . import email_parse_util
+import plotly.express as px
+from .models import InventoryItem  # Adjust based on your model
 
 
 # Assuming this function is correctly getting MongoDB client and fetching data
@@ -216,94 +215,93 @@ def ItemData(request, item_id):
     return render(request, "item_data.html", {'item': item})
 
 
-def WarehouseDateItemView(request, warehouse_id):
-    warehouse = Warehouse.objects.get(id=warehouse_id)
-    inventory = Inventory.objects.filter(warehouse=warehouse).latest('date')
-    inv_items = inventory.items.all()
-    items = Item.objects.filter(Q(item_type='G') | Q(item_type='W'))
+# def WarehouseDateItemView(request, warehouse_id):
+#     warehouse = Warehouse.objects.get(id=warehouse_id)
+#     inventory = Inventory.objects.filter(warehouse=warehouse).latest('date')
+#     inv_items = inventory.items.all()
+#     items = Item.objects.filter(Q(item_type='G') | Q(item_type='W'))
+#
+#     return render(request, "warehouse_dates.html", {'items': inv_items, 'warehouse': warehouse})
 
-    return render(request, "warehouse_dates.html", {'items': inv_items, 'warehouse': warehouse})
+
+# @login_required
+# def WarehouseDateItemForm(request, item_id):
+#     item = Item.objects.get(id=item_id)
+#     items = Item.objects.filter(Q(item_type='G') | Q(item_type='W'))
+#     last_item = items.last()
+#     form = WarehouseForm()
+#     if item.pk is last_item.pk:
+#         return render(request, "warehouse_dates.html", {'items': items})
+#     return render(request, "item_date_form.html", {'item': item, 'form': form})
+
+
+# @login_required
+# def WarehouseDateItemInput(request, item_id, inventory_id):
+#     inventory = Inventory.objects.get(id=inventory_id)
+#     if request.method == 'POST':
+#         # create a form instance and populate it with data from the request:
+#         form = WarehouseForm(request.POST)
+#         # check whether it's valid:
+#         if form.is_valid():
+#             date = form.cleaned_data['Date']
+#             amount = form.cleaned_data['Amount']
+#
+#             item = Item.objects.get(id=item_id)
+#
+#             add_item, created = InventoryItem.objects.get_or_create(
+#                 item=item,
+#                 total_quantity=amount,
+#                 item_date=date,
+#             )
+#
+#             inventory.items.add(add_item)
+#             inventory.save()
+#
+#             items = Item.objects.filter(Q(item_type='G') | Q(item_type='W'))
+#             last_item = items.last()
+#             item = Item.objects.get(id=item_id + 1)
+#             if item.pk is last_item.pk:
+#                 return render(request, "warehouse_dates.html", {'items': items})
+#             return render(request, "item_date_form.html", {'form': form, 'item': item, 'inventory': inventory})
+#
+#     # if a GET (or any other method) we'll create a blank form
+#     else:
+#         form = WarehouseForm()
+#
+#     return render(request, 'item_date_form.html', {'form': form, 'inventory': inventory})
+
+
+# @login_required
+# def WarehouseDateForm(request, warehouse_id):
+#     items = Item.objects.all()
+#
+#     warehouse = Warehouse.objects.get(id=warehouse_id)
+#     inventory = Inventory.objects.filter(warehouse=warehouse).latest('date')
+#     inv_items = inventory.items.all()
+#
+#     for item in inv_items:
+#         item.item_date = None
+#         item.save()
+#
+#     item = items.first()
+#     form = WarehouseForm()
+#
+#     return render(request, 'item_date_form.html', {'form': form, 'item': item, 'inventory': inventory})
 
 
 @login_required
-def WarehouseDateItemForm(request, item_id):
-    item = Item.objects.get(id=item_id)
-    items = Item.objects.filter(Q(item_type='G') | Q(item_type='W'))
-    last_item = items.last()
-    form = WarehouseForm()
-    if item.pk is last_item.pk:
-        return render(request, "warehouse_dates.html", {'items': items})
-    return render(request, "item_date_form.html", {'item': item, 'form': form})
-
-
-@login_required
-def WarehouseDateItemInput(request, item_id, inventory_id):
-    inventory = Inventory.objects.get(id=inventory_id)
-    if request.method == 'POST':
-        # create a form instance and populate it with data from the request:
-        form = WarehouseForm(request.POST)
-        # check whether it's valid:
-        if form.is_valid():
-            date = form.cleaned_data['Date']
-            amount = form.cleaned_data['Amount']
-
-            item = Item.objects.get(id=item_id)
-
-            add_item, created = InventoryItem.objects.get_or_create(
-                item=item,
-                total_quantity=amount,
-                item_date=date,
-            )
-
-            inventory.items.add(add_item)
-            inventory.save()
-
-            items = Item.objects.filter(Q(item_type='G') | Q(item_type='W'))
-            last_item = items.last()
-            item = Item.objects.get(id=item_id + 1)
-            if item.pk is last_item.pk:
-                return render(request, "warehouse_dates.html", {'items': items})
-            return render(request, "item_date_form.html", {'form': form, 'item': item, 'inventory': inventory})
-
-    # if a GET (or any other method) we'll create a blank form
-    else:
-        form = WarehouseForm()
-
-    return render(request, 'item_date_form.html', {'form': form, 'inventory': inventory})
-
-
-@login_required
-def WarehouseDateForm(request, warehouse_id):
-    items = Item.objects.all()
-
-    warehouse = Warehouse.objects.get(id=warehouse_id)
-    inventory = Inventory.objects.filter(warehouse=warehouse).latest('date')
-    inv_items = inventory.items.all()
-
-    for item in inv_items:
-        item.item_date = None
-        item.save()
-
-    item = items.first()
-    form = WarehouseForm()
-
-    return render(request, 'item_date_form.html', {'form': form, 'item': item, 'inventory': inventory})
-
-
-@login_required
-def WarehouseDateFormSkip(request, item_id, inventory_id):
-    inventory = Inventory.objects.get(id=inventory_id)
-    item = Item.objects.get(id=item_id + 1)
-    form = WarehouseForm()
-
-    items = Item.objects.filter(Q(item_type='G') | Q(item_type='W'))
-    last_item = items.last()
-
-    if item.pk is last_item.pk:
-        return render(request, "warehouse_dates.html", {'items': items, 'inventory': inventory})
-
-    return render(request, "item_date_form.html", {'form': form, 'item': item, 'inventory': inventory})
-
+# def WarehouseDateFormSkip(request, item_id, inventory_id):
+#     inventory = Inventory.objects.get(id=inventory_id)
+#     item = Item.objects.get(id=item_id + 1)
+#     form = WarehouseForm()
+#
+#     items = Item.objects.filter(Q(item_type='G') | Q(item_type='W'))
+#     last_item = items.last()
+#
+#     if item.pk is last_item.pk:
+#         return render(request, "warehouse_dates.html", {'items': items, 'inventory': inventory})
+#
+#     return render(request, "item_date_form.html", {'form': form, 'item': item, 'inventory': inventory})
 
 def WarehouseDashboard(request):
     warehouses = Warehouse.objects.all()
@@ -368,7 +366,7 @@ def PrintPalletPages(request, warehouse_id):
 
 @login_required
 def WarehousePhysicalInventory(request, item_id):
-    return render(request, 'item_date_form.html', {'form': form})
+    return render(request, 'item_date_form.html')
 
 
 @login_required
@@ -470,7 +468,7 @@ def complete_order(request, order_id):
         return HttpResponse("Error connecting to database", status=500)
 
     client.close()
-    return render(request, 'order_detail.html', {'order': order})
+    return redirect()
 
 
 def order_detail_view(request, order_id):
@@ -525,7 +523,7 @@ def generate_order_pdf(request, order_id):
     OOS = list(OOS_items)
 
     ship_to_routes = [
-        "RTC000003", "RTC000013", "RTC000018", "RTC000019", "RTC000089",
+        "RTC000003", "RTC00013", "RTC000018", "RTC000019", "RTC000089",
         "RTC000377", "RTC000379", "RTC000649", "RTC000700", "RTC000719"
     ]
 
@@ -622,3 +620,372 @@ def generate_order_pdf(request, order_id):
     p.showPage()
     p.save()
     return response
+
+
+def inventory_view(request, warehouse_id):
+    try:
+        uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
+        client = MongoClient(uri)
+        db = client['mydatabase']
+        inventory_collection = db['inventory']
+        items_collection = db['items']
+
+        # Fetch the latest inventory
+        latest_inventory = inventory_collection.find().sort("_id", -1).limit(1)
+        latest_inventory = list(latest_inventory)
+
+        if latest_inventory:
+            inventory_items = latest_inventory[0]['items']
+        else:
+            inventory_items = []
+
+        # Fetch all items from the items collection
+        all_items = list(items_collection.find({}, {'ItemNumber': 1, 'ItemDescription': 1}))
+
+        # Initialize the Out of Stock items list
+        OOS_items = []
+
+        # Create a set of ItemNumbers from the latest inventory for faster lookup
+        inventory_item_numbers = {item['ItemNumber'] for item in inventory_items if 'ItemNumber' in item}
+
+        # Check each item in all_items to see if its ItemNumber is missing from the latest inventory
+        for item in all_items:
+            if 'ItemNumber' in item and item['ItemNumber'] not in inventory_item_numbers:
+                OOS_items.append(item)
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return HttpResponse("Error connecting to database", status=500)
+
+        # Include OOS_items in the context passed to the template
+    return render(request, 'inventory/inventory_list.html',
+                  {'inventory_items': inventory_items, 'OOS_items': OOS_items})
+
+
+def verify_order(request, order_id):
+    try:
+        uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
+        client = MongoClient(uri)
+        db = client['mydatabase']
+
+        orders_collection = db['orders']
+        transfers_collection = db['Transfers']
+
+        order = orders_collection.find_one({'_id': ObjectId(order_id)})
+        if not order:
+            return JsonResponse({"error": "Order not found"}, status=404)
+
+        order_id_str = str(order['_id'])
+        last_4_digits = order_id_str[-4:]
+
+        matching_transfer = transfers_collection.find_one({"transfer_id": {"$regex": ".*" + last_4_digits + "$"}})
+        if not matching_transfer:
+            return JsonResponse({"error": "No matching transfer found"}, status=404)
+
+        order_items = order.get('items', [])
+        transfer_items = matching_transfer.get('items', [])
+
+        # Assuming each item is a dictionary with an 'item_name' key
+        non_matching_items = [item['item_name'] for item in order_items if item not in transfer_items]
+
+        response_data = {
+            "order": json.loads(json_util.dumps(order)),
+            "transfer": json.loads(json_util.dumps(matching_transfer)),
+        }
+
+        if not non_matching_items:
+            response_data["message"] = "Order and transfer items match."
+            status_code = 200
+        else:
+            non_matching_items_str = ", ".join(non_matching_items)
+            response_data[
+                "message"] = f"Order and transfer items do not match. Non-matching items: {non_matching_items_str}"
+            response_data["non_matching_items"] = non_matching_items
+            status_code = 400
+
+        return JsonResponse(response_data, status=status_code, safe=False)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@require_http_methods(["GET", "POST"])
+def place_order_view(request):
+    if request.method == 'POST':
+        try:
+            # Assuming JSON data is sent
+            data = json.loads(request.body)
+            date = data.get('date')
+            route = data.get('route')
+            orders = data.get('orders')  # This is expected to be a list of items
+            status = data.get('status', 'Received')  # Default status
+            transfer_id = data.get('transfer_id')
+
+            # MongoDB connection setup
+            uri = "your_mongodb_connection_uri"
+            client = MongoClient(uri)
+            db = client['mydatabase']
+            orders_collection = db['orders2']
+
+            # Create and save the entire order
+            order = {
+                'date': date,
+                'route': route,
+                'orders': orders,  # Directly saving the array of items
+                'status': status,
+                'transfer_id': transfer_id,
+            }
+            order_id = orders_collection.insert_one(order).inserted_id
+
+            client.close()
+
+            # Return a success response with the order ID
+            return JsonResponse({'message': 'Order placed successfully', 'order_id': str(order_id)}, status=201)
+
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+    # For GET requests, show the form (assuming you have a template for it)
+    return render(request, 'orders/place_order.html')
+
+
+def list_items_view(request, warehouse_id):
+    uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
+    client = MongoClient(uri)
+    db = client['mydatabase']
+    items_collection = db['items']
+
+    items_cursor = items_collection.find({})
+    items_by_type = {}
+    for item in items_cursor:
+        # Replace spaces in keys
+        processed_item = {k.replace(' ', '_'): v for k, v in item.items()}
+
+        item_type = processed_item.get('Item_Type', 'Other')  # Adjusted key
+        if item_type not in items_by_type:
+            items_by_type[item_type] = []
+        items_by_type[item_type].append(processed_item)
+
+    client.close()
+    return render(request, 'list_items.html', {'items_by_type': items_by_type})
+
+
+def review_order_view(request):
+    if request.method == 'POST':
+        items = []
+        for key, value in request.POST.items():
+            if key.startswith('item_number_'):
+                try:
+                    *_, type_index, item_index = key.split('_')
+                    item_number = value
+                    item_description_key = f'item_description_{type_index}_{item_index}'
+                    quantity_key = f'quantity_{type_index}_{item_index}'
+                    item_description = request.POST.get(item_description_key, '')
+                    quantity = request.POST.get(quantity_key, 0)
+                    transformed_items = []
+                    for item in items:
+                        transformed_item = {
+                            'Item_Number': item.get('Item Number'),
+                            'Item_Description': item.get('Item Description', 'Default Description'),
+                            'Quantity': item.get('Quantity')
+                        }
+                        transformed_items.append(transformed_item)
+                except ValueError as e:
+                    print(f"Error processing {key}: {e}")
+                    # Handle the error appropriately, e.g., log it, send a user-friendly message, etc.
+                    return HttpResponse("There was an error processing your request.", status=400)
+
+        # Assuming you're using Django's session framework to temporarily store the order
+        request.session['order_review'] = items
+
+        # Proceed to render the review order template or handle as necessary
+        return render(request, 'orders/review_order.html', {'items': items})
+
+    # Redirect or handle get requests differently
+    return redirect('list_items')  # Adjust as necessary
+
+
+# Ensure MongoDB setup and submission logic is correctly implemented
+def submit_order(request):
+    if request.method == 'POST':
+        # Assuming order details are stored in the session during review
+        order_items = request.session.get('order_review', [])
+        if not order_items:
+            return JsonResponse({'error': 'Session expired or order details missing.'}, status=400)
+
+        # MongoDB connection and order submission logic
+        uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
+        client = MongoClient(uri)
+        db = client['mydatabase']
+        orders_collection = db['orders2']
+
+        # Create and save the order
+        order = {
+            'orders': order_items,
+            'status': 'Received',
+            # Add any other necessary order details here
+        }
+        order_id = orders_collection.insert_one(order).inserted_id
+
+        # Clear the session data for order review
+        del request.session['order_review']
+
+        client.close()
+
+        # Redirect to a confirmation page or return a success response
+        return JsonResponse({'message': 'Order submitted successfully', 'order_id': str(order_id)}, status=201)
+
+    else:
+        return redirect('list_items')
+
+
+def inventory_with_6week_avg(request, warehouse_id):
+    try:
+        uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
+        client = MongoClient(uri)
+        db = client['mydatabase']
+        inventory_collection = db['inventory']
+        items_collection = db['items']
+
+        # Fetch latest inventory
+        latest_inventory = inventory_collection.find().sort("_id", -1).limit(1).next()
+        inventory_items = latest_inventory['items']
+
+        items_with_avg = []
+        for inventory_item in inventory_items:
+            item_name = inventory_item.get('ItemName')
+            item_data = items_collection.find_one({'Item Description': item_name})
+            if item_data:
+                six_week_avg = -item_data.get('6 week average')
+
+                comparison = 'Higher' if int(inventory_item.get('Cases', 0)) > six_week_avg else 'Lower'
+                items_with_avg.append({
+                    'ItemName': item_name,
+                    'ItemNumber': item_data.get('Item Number'),
+                    'Cases': inventory_item.get('Cases', 'N/A'),
+                    'sixAvg': six_week_avg,
+                    'Comp': comparison
+                })
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return HttpResponse("Error connecting to database", status=500)
+
+    # Render the comparison in the template
+    return render(request, 'inventory/inventory_with_avg.html', {'items_with_avg': items_with_avg})
+
+
+def inventory_visualization_view(request, warehouse_id):
+    selected_week = request.GET.get('week', 'Week 1')  # Default to 'Week 1' if not specified
+
+    uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
+    client = MongoClient(uri)
+    db = client['mydatabase']
+    items_collection = db['items']
+
+    items_data = list(items_collection.find())
+
+    # Initialize DataFrame columns
+    data = {'Item Number': [], 'Item Type': [], 'Item Description': [], 'Transferred Items': []}
+
+    # Populate DataFrame with data for the selected week
+    for item in items_data:
+        week_value = item.get(selected_week, 0) if selected_week in item else 0
+        data['Item Number'].append(item['Item Number'])
+        data['Item Type'].append(item['Item Type'])
+        data['Item Description'].append(item['Item Description'])
+        data['Transferred Items'].append(abs(week_value))  # Use absolute value for transferred items
+
+    df = pd.DataFrame(data)
+
+    # Create visualization with Plotly
+    fig = px.bar(df, x='Item Description', y='Transferred Items', color='Item Type',
+                 title=f'Transfers for {selected_week}')
+    plot_div = fig.to_html(full_html=False)
+
+    client.close()
+
+    return render(request, 'inventory/inventory_plot.html', {'plot_div': plot_div, 'selected_week': selected_week})
+
+
+def weekly_trend_view(request, warehouse_id, item_type):
+    selected_week = request.GET.get('week', 'Week 1')  # Default to 'Week 1' if not specified
+
+    uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
+    client = MongoClient(uri)
+    db = client['mydatabase']
+    items_collection = db['items']
+
+    items_data = list(items_collection.find())
+
+    # Initialize DataFrame columns
+    data = {'Item Number': [], 'Item Type': [], 'Item Description': [], 'Transferred Items': []}
+
+    # Populate DataFrame with data for the selected week
+    for item in items_data:
+        week_value = item.get(selected_week, 0) if selected_week in item else 0
+        data['Item Number'].append(item['Item Number'])
+        data['Item Type'].append(item['Item Type'])
+        data['Item Description'].append(item['Item Description'])
+        data['Transferred Items'].append(abs(week_value))  # Use absolute value for transferred items
+
+    df = pd.DataFrame(data)
+
+    # Filter DataFrame by selected item type
+    df_filtered = df[df['Item Type'] == item_type]
+
+    # Assuming you have weekly data columns like 'Week 1', 'Week 2', etc., in your items_data
+    weeks = [f'Week {i}' for i in range(1, 53)]  # Example for 52 weeks
+    weekly_transfers = {week: df_filtered[week].sum() for week in weeks if week in df_filtered}
+
+    # Convert to DataFrame for plotting
+    df_weekly = pd.DataFrame(list(weekly_transfers.items()), columns=['Week', 'Transferred Items'])
+
+    # Create visualization
+    fig = px.line(df_weekly, x='Week', y='Transferred Items',
+                  title=f'Weekly Trend of Transferred Items for {item_type}')
+    plot_div = fig.to_html(full_html=False)
+
+    # Close MongoDB connection and return the plot
+    client.close()
+    return render(request, 'inventory/inventory_plot.html', {'plot_div': plot_div, 'item_type': item_type})
+
+
+def comparison_across_weeks_view(request, warehouse_id):
+    selected_week = request.GET.get('week', 'Week 1')  # Default to 'Week 1' if not specified
+
+    uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
+    client = MongoClient(uri)
+    db = client['mydatabase']
+    items_collection = db['items']
+
+    items_data = list(items_collection.find())
+
+    # Initialize DataFrame columns
+    data = {'Item Number': [], 'Item Type': [], 'Item Description': [], 'Transferred Items': []}
+
+    # Populate DataFrame with data for the selected week
+    for item in items_data:
+        week_value = item.get(selected_week, 0) if selected_week in item else 0
+        data['Item Number'].append(item['Item Number'])
+        data['Item Type'].append(item['Item Type'])
+        data['Item Description'].append(item['Item Description'])
+        data['Transferred Items'].append(abs(week_value))  # Use absolute value for transferred items
+
+    df = pd.DataFrame(data)
+
+    # You need to pivot your data to have weeks as columns and item types as rows with transferred items as values
+    # This example assumes you have manipulated your DataFrame 'df' accordingly
+
+    # Pivoting DataFrame for Plotly
+    df_pivot = df.pivot_table(index='Week', columns='Item Type', values='Transferred Items',
+                              aggfunc='sum').reset_index()
+
+    # Create visualization
+    fig = px.line(df_pivot, x='Week', y=df_pivot.columns[1:], title='Comparison of Item Types Across Weeks',
+                  markers=True)
+    plot_div = fig.to_html(full_html=False)
+
+    # Close MongoDB connection and return the plot
+    client.close()
+    return render(request, 'inventory/inventory_plot.html', {'plot_div': plot_div})
