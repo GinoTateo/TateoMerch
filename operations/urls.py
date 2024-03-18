@@ -18,10 +18,10 @@ urlpatterns = [
 
     # Order
     path('warehouse/<int:warehouse_id>/orderform', login_required(orderForm.as_view()), name='warehouse-orderform'),
-    path('warehouse/<int:warehouse_id>/order', list_items_view, name='warehouse-order'),
-    path('warehouse/<int:warehouse_id>/inventory', views.inventory_view, name='warehouse-inventory'),
+    path('warehouse/<int:warehouse_id>/order/', list_items_view, name='warehouse-order'),
+    path('warehouse/<int:warehouse_id>/inventory/', views.inventory_view, name='warehouse-inventory'),
     # path('warehouse/<int:warehouse_id>/inventory/physical', views.WarehouseDateForm, name='warehouse-physical-inventory'),
-    path('warehouse/orders', views.orders_view, name='orderview'),
+    path('warehouse/order/', views.orders_view, name='orderview'),
     path('warehouse/order/<str:order_id>/', views.order_detail_view, name='detail_view'),
     path('place_order/', place_order_view, name='place_order'),
     path('review_order/', views.review_order_view, name='review_order'),
@@ -32,6 +32,8 @@ urlpatterns = [
     path('data/<int:item_id>', views.ItemData, name='item-data'),
 
     path('dashboard/', views.WarehouseDashboard, name='warehouse-dash'),
+    path('warehouse/dashboard/', views.WarehouseDashboard, name='warehouse-dash'),
+
     path('warehouse/<int:warehouse_id>', views.WarehouseDetail, name='warehouse-detail'),
     path('warehouse/<int:warehouse_id>/warehousemanager', views.WarehouseManagerDetail, name='warehouse-detail'),
 
@@ -55,8 +57,6 @@ urlpatterns = [
 
     # Inventory
     path('warehouse/<int:warehouse_id>/inventory/', views.inventory_view, name='inventory'),
-    path('warehouse/<int:warehouse_id>/visualize-inventory/', views.inventory_visualization_view,
-         name='inventory_visualize'),
     path('warehouse/<int:warehouse_id>/runrates/', views.inventory_with_6week_avg, name='run_rates'),
     path('warehouse/<int:warehouse_id>/trends/<str:item_type>/', views.weekly_trend_view, name='trends'),
     path('warehouse/<int:warehouse_id>/comparison/', views.comparison_across_weeks_view, name='comparison'),

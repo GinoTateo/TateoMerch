@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -11,6 +12,7 @@
 <body>
 
 {% extends 'navbar.html' %}
+{% load custom_filters %}
 {% block content %}
 
 <main class="container">
@@ -34,7 +36,7 @@
                     <td>{{ item.ItemNumber }}</td>
                     <td>{{ item.ItemName }}</td>
                     <td>{{ item.Cases }}</td>
-                    <td>{{ item.sixAvg }}</td>
+                    <td>{{ item.sixAvg|to_int }}</td>
                     <td>
                         {% if item.Comp == 'Higher' %}
                             <span class="higher text-success">{{ item.Comp }}</span>

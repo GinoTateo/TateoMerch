@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Orders</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        /* Optional: Add some basic styling to improve presentation */
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 20px;
+        }
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .card h2 {
+            margin-top: 0;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .status-complete {
+            color: green;
+        }
+        .status-received {
+            color: yellow;
+        }
+        .filter-section {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+{% include 'navbar.html' %}
+{% block content %}
+<body>
+    <div class="container">
+        <h1>Orders Overview</h1>
+            <div class="card filter-section">
+            <form action="" method="get" class="filter-form">
+                <fieldset>
+                    <legend>Filter Options</legend>
+
+                    <div class="form-group">
+                        <label for="date">Date:</label>
+                        <input type="date" id="date" name="date" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="status">Status:</label>
+                        <select id="status" name="status" class="form-control">
+                            <option value="">Select Status</option>
+                            <option value="Complete">Complete</option>
+                            <option value="Received">Received</option>
+                            <!-- Add more status options as needed -->
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="route">Route #:</label>
+                        <input type="text" id="route" name="route" class="form-control" placeholder="Enter Route Number">
+                    </div>
+
+                    <input type="submit" value="Filter" class="btn btn-primary">
+                </fieldset>
+            </form>
+        </div>
+        <div class="row">
+            {% for order in orders %}
+            <article class="card mb-3">
+                <h2>{{ order.route }} {{ order.date|date:"Y-m-d" }}</h2>
+                <div>
+                    <p>Order ID: {{ order.order_id }}</p>
+                    <p>Route Number: {{ order.route }} </p>
+                    <p>Date: {{ order.pick_up_date }}</p>
+                    <p>Total Items: {{ order.total_cases }}</p>
+                    <p>Status: <span style="{% if order.status == 'Complete' %}color: green;{% else %}color: darkorange;{% endif %}">{{ order.status }}</span></p>
+
+                    <a href="{{ order.order_id }}/static" class="button" >View Details</a>
+                    <a href="{{ order.order_id }}/complete/?date={{ request.GET.date }}&status={{ request.GET.status }}&route={{ request.GET.route }}" class="button">Complete</a>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+{% endblock %}
+
+</html>

@@ -1,8 +1,11 @@
-import imaplib
 import email as email_lib
 from pymongo import MongoClient
+import imaplib
+from email import policy
+from email.parser import BytesParser
+from bs4 import BeautifulSoup
+import re
 from datetime import datetime
-
 
 def fetch_last_email_content(email_address, password):
     """
@@ -46,143 +49,163 @@ def fetch_last_email_content(email_address, password):
 # Example usage
 # email_content = fetch_last_email_content('your_email@gmail.com', 'your_password')
 
+def parse_email_content(email_content):
+    msg = BytesParser(policy=policy.default).parsebytes(email_content)
 
-def parse_email(raw_email_content):
-    """
-    Parses the raw content of an email, handles forwarded emails, and extracts specific data points and order details.
-    Adjusted to handle multi-line item details format.
-
-    :param raw_email_content: The raw email content.
-    :return: A dictionary containing the extracted data points and order details.
-    """
-    if not raw_email_content:
-        print("No email content provided.")
-        return None
-
-    email_message = email_lib.message_from_bytes(raw_email_content)
-    email_id = email_message.get('Message-ID')  # Get the email's unique ID
-
-    # Define a dictionary to hold the extracted data
+    # Initial structure for extracted data
     extracted_data = {
-        'Route Name': None,
-        'Route Number': None,
-        'Pick up Date': None,
-        'Pick up Time': None,
-        'Total Cases': None,
-        'Order Details': [],
-        'Email ID': email_id
+        'email_id': msg.get('Message-ID'),  # Extract email ID
+        'route_name': None,
+        'route': None,
+        'pick_up_date': None,
+        'pick_up_time': None,
+        'total_cases': None,
+        'items': [],
+        'additional_items_needed': None,
     }
 
-    def decode_payload(payload, charset='utf-8'):
-        try:
-            return payload.decode(charset)
-        except UnicodeDecodeError:
-            return payload.decode('ISO-8859-1')  # Fallback decoding
+    # Function to extract text content and handle forwarded emails
+    def handle_forwarded_emails(text_content):
+        forwarded_patterns = [
+            "Forwarded message", "Begin forwarded message", "^From:", "^Sent:",
+            "^To:", "Original Message", "^\-\- Forwarded message \-\-$"
+        ]
+        for pattern in forwarded_patterns:
+            if re.search(pattern, text_content, re.IGNORECASE):
+                # Find the start of the original message and return the substring
+                start = re.search(pattern, text_content, re.IGNORECASE).start()
+                return text_content[start:]
+        return text_content
 
-    # Extract the body of the email
-    body = ''
-    if email_message.is_multipart():
-        for part in email_message.walk():
-            if part.get_content_type() == "text/plain":
-                body = decode_payload(part.get_payload(decode=True))
-                break
+    # Function to extract details from text content
+    def extract_order_details(html_body):
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(html_body, 'html.parser')
+        text = soup.get_text(separator=' ')  # Use space as separator to prevent concatenation of words
+
+        details_patterns = {
+            'route_name': r"Route Name:\s*([^\n]+)",
+            'route': r"Route Number:\s*([^\n]+)",
+            'pick_up_date': r"Pick up Date:\s*([^\n]+)",
+            'pick_up_time': r"Pick up Time:\s*([^\n]+)",
+            'total_cases': r"Total Cases:\s*(\d+)",
+            # Assuming 'Additional Items Needed' might not always be followed by identifiable content
+            'additional_items_needed': r"Additional Items Needed:\s*([^\n]*)",
+        }
+
+        for key, pattern in details_patterns.items():
+            match = re.search(pattern, text, re.IGNORECASE)
+            if match:
+                extracted_data[key] = match.group(1).strip()
+
+        # Parse 'pick_up_date' specifically if present
+        if extracted_data['pick_up_date']:
+            try:
+                extracted_data['pick_up_date'] = datetime.strptime(extracted_data['pick_up_date'], "%m/%d/%Y").date()
+            except ValueError as e:
+                print(f"Error parsing pick_up_date: {e}")
+                extracted_data['pick_up_date'] = None
+
+    # Function to parse HTML and extract table data
+    def extract_table_from_html(html_body):
+        soup = BeautifulSoup(html_body, 'html.parser')
+        table = soup.find('table')
+        if table:
+            rows = table.find_all('tr')
+            for row in rows[1:]:  # Skipping the first row as it's assumed to be headers
+                cols = row.find_all('td')
+                if len(cols) >= 4:  # Ensuring there are at least 4 columns to match your structure
+                    # Constructing a dictionary with explicit keys based on column positions
+                    item_dict = {
+                        'ItemNumber': cols[1].text.strip(),  # Assuming cols[1] is ItemNumber
+                        'ItemDescription': cols[2].text.strip(),  # Assuming cols[2] is ItemDescription
+                        'Quantity': cols[3].text.strip(),  # Assuming cols[3] is Quantity
+                    }
+                    extracted_data['items'].append(item_dict)
+
+    # Extract content and apply parsing logic
+    if msg.is_multipart():
+        for part in msg.walk():
+            part_type = part.get_content_type()
+            payload = part.get_payload(decode=True)
+            charset = part.get_content_charset('utf-8')
+            if part_type == "text/plain":
+                text_content = payload.decode(charset)
+                text_content = handle_forwarded_emails(text_content)
+                extract_order_details(text_content)
+            elif part_type == "text/html":
+                html_content = payload.decode(charset)
+                extract_table_from_html(html_content)
+                html_text_content = BeautifulSoup(html_content, 'html.parser').get_text()
+                extract_order_details(html_text_content)
     else:
-        body = decode_payload(email_message.get_payload(decode=True))
-
-    # Parsing the body for the specific data points and order form
-    capturing_items = False
-    item_buffer = []  # Temporary buffer to hold multi-line item details
-
-    for line in body.splitlines():
-        line = line.strip()
-        if not capturing_items:
-            # Check for and extract key data points before items
-            if ":" in line:
-                key, value = line.split(':', 1)
-                if key in extracted_data:
-                    extracted_data[key] = value.strip()
-            if "Quantity" in line:
-                capturing_items = True  # Start capturing items after this line
-                continue
-        else:
-            # Handle item details spread across multiple lines
-            if line:  # Ensure line is not empty
-                # Check for the end of item details or start of additional information
-                if "Additional Items Needed" in line or line.startswith("Item Number"):
-                    # Process buffered item details
-                    if len(item_buffer) == 3:  # Assuming item details are complete
-                        extracted_data['Order Details'].append({
-                            'Item Number': item_buffer[0],
-                            'Item Description': item_buffer[1],
-                            'Quantity': item_buffer[2]
-                        })
-                    item_buffer.clear()  # Reset buffer for the next item
-                    if "Additional Items Needed" in line:
-                        break  # Stop capturing after this line
-                else:
-                    # Continue buffering item details
-                    item_buffer.append(line)
-                    if len(item_buffer) == 3:  # Assuming item details are complete
-                        extracted_data['Order Details'].append({
-                            'Item Number': item_buffer[0],
-                            'Item Description': item_buffer[1],
-                            'Quantity': item_buffer[2]
-                        })
-                        item_buffer.clear()  # Prepare for next item
-
-    # Debugging print of the extracted data
-    for key, value in extracted_data.items():
-        if key != 'Order Details':
-            print(f"{key}: {value}")
-        else:
-            print("Order Details:")
-            for item in value:
-                print(item)
+        content_type = msg.get_content_type()
+        payload = msg.get_payload(decode=True)
+        charset = msg.get_content_charset('utf-8')
+        if content_type == "text/plain":
+            text_content = payload.decode(charset)
+            text_content = handle_forwarded_emails(text_content)
+            extract_order_details(text_content)
+        elif content_type == "text/html":
+            html_content = payload.decode(charset)
+            extract_table_from_html(html_content)
+            html_text_content = BeautifulSoup(html_content, 'html.parser').get_text()
+            extract_order_details(html_text_content)
 
     return extracted_data
-
 
 # Example usage
 # raw_email_content = fetch_last_email_content('your_email@gmail.com', 'your_password')
 # parsed_data = parse_email(raw_email_content)
 
 
-def insert_order_into_mongodb(extracted_data, client, db_name='mydatabase', orders_collection='orders',
-                              status_collection='status'):
+def insert_order_into_mongodb(extracted_data, client, db_name='mydatabase', orders_collection='orders'):
     """
-    Inserts the order details into a MongoDB collection, organized by date and route.
+    Inserts the order details into a MongoDB collection.
 
-    :param status_collection:
     :param extracted_data: The data to be inserted, including the order details.
+    :param client: MongoDB client instance.
     :param db_name: The name of the database.
     :param orders_collection: The name of the collection for orders.
     """
     # Check if the necessary data is available
-    if not extracted_data.get('Order Details') or not extracted_data.get('Pick up Date') or not extracted_data.get(
-            'Route Number'):
-        print("Missing order details, date, or route number.")
+    if not extracted_data['items']:
+        print("Missing items in order details.")
         return
 
-    # Select the database and collection
-    db = client[db_name]
-    collection = db[orders_collection]
-
     # Prepare the document to be inserted
+    try:
+        pick_up_date = datetime.today()
+    except ValueError as e:
+        print(f"Error parsing pick_up_date: {e}")
+        pick_up_date = None
+
     order_document = {
-        'email_id': extracted_data['Email ID'],
-        'date': datetime.strptime(extracted_data['Pick up Date'], "%m/%d/%Y"),  # Adjust date format if necessary
-        'route': extracted_data['Route Number'],
-        'orders': extracted_data['Order Details'],
+        'route_name': extracted_data.get('route_name'),
+        'route': extracted_data.get('route'),
+        'pick_up_date': pick_up_date,
+        'pick_up_time': extracted_data.get('pick_up_time'),
+        'total_cases': extracted_data.get('total_cases'),
+        'items': extracted_data['items'],  # Assuming items is a list of dictionaries
         'status': "Received",
     }
 
-    # Insert the document into the collection
-    result = collection.insert_one(order_document)
+    # Select the database and collection
+    db = client[db_name]
+    orders_col = db[orders_collection]
+
+    # Insert the document into the orders collection
+    result = orders_col.insert_one(order_document)
     print(f"Order data inserted with record id: {result.inserted_id}")
 
-    db = client[db_name]
-    collection = db[status_collection]
-    collection.update_one({'variable': 'last_parsed'}, {'$set': {'value': extracted_data['Email ID']}}, upsert=True)
+    # Generate transfer_ID (e.g., using the last 4 characters of the MongoDB _id)
+    transfer_id = str(result.inserted_id)[-4:]
+
+    # Update the document with the transfer_ID
+    orders_col.update_one({'_id': result.inserted_id}, {'$set': {'transfer_id': transfer_id}})
+
+    print(f"Order updated with transfer_id: {transfer_id}")
+
 
 
 # Example usage
@@ -251,7 +274,7 @@ def check_and_parse_new_emails(email_address, email_password, client, db_name='m
         subject = str(email_lib.header.make_header(email_lib.header.decode_header(email_message['Subject'])))
 
         if 'Concord Peet\'s Route Replenishment Submission' in subject:
-            parsed_data = parse_email(raw_email)
+            parsed_data = parse_email_content(raw_email)
             if parsed_data is not None:
                 insert_order_into_mongodb(parsed_data, client, db_name, orders_collection)
 
@@ -259,3 +282,12 @@ def check_and_parse_new_emails(email_address, email_password, client, db_name='m
 # Example usage
 # client = MongoClient('mongodb://localhost:27017/')  # or your MongoDB connection details
 # check_and_parse_new_emails('your_email@gmail.com', 'your_password', client)
+
+
+if __name__ == '__main__':
+    email = "GJTat901@gmail.com"
+    password = "xnva kbzm flsa szzo"
+    uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
+    client = MongoClient(uri)
+
+    check_and_parse_new_emails(email, password, client, 'mydatabase', 'orders')

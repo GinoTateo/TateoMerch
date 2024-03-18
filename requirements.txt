@@ -29,3 +29,4 @@ whitenoise==6.2.0
 reportlab~=4.0.4
 dj-config-url~=0.1.1
 plotly~=5.19.0
+beautifulsoup4~=4.12.3

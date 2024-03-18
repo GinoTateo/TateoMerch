@@ -73,7 +73,7 @@
 {#        <div class="info-field">#}
 {#            <label>Adjusted Case Count: <input type="number" placeholder="0"></label>#}
 {#        </div>#}
-        <h3>Route Number: {{ order.route }} - {{ order.date|date:"M. d, Y" }} </h3>
+        <h3>Route Number: {{ order.route }} - {{ order.pick_up_date}} </h3>
 
     <a href="/ops/warehouse/orders" class="button bg-dark" >Back</a>
     <a href="verify/" class="button" >Verify</a>
@@ -88,7 +88,7 @@
 
 
         <section class="pick-list">
-            {% for item in order.orders %}
+            {% for item in order.items %}
             <div class="item">
                 <label>
                     <input type="checkbox" class="checkbox">

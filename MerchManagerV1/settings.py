@@ -35,7 +35,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', default='your secret key')
 DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.0.1', 'https://shipteo.onrender.com/', 'shipteo.onrender.com', 'shipteo.com',
-                 'https://www.shipteo.com/', 'www.shipteo.com']
+                 'https://www.shipteo.com/', 'www.shipteo.com', "192.168.5.70"]
 
 AUTH_USER_MODEL = "account.Account"
 # Application definition

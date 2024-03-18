@@ -1,72 +1,71 @@
 {% load static %}
 <!doctype html>
 <html lang="en">
-  <head>
+<head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="shortcut icon" type="image/png" href="{% static 'images/favicon.ico' %}"/>
     <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
 
-
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.min.js" integrity="sha384-cuYeSxntonz0PPNlHhBs68uyIAVpIIOZZ5JqeqvYYIcEL727kskC66kF92t6Xl2V" crossorigin="anonymous"></script>
-      <title>ShipTeo</title>
-  </head>
-    <nav class="navbar navbar-expand navbar-light bg-light">
-        <div class="container-fluid">
-          <a class="navbar-brand tateomerch_logo_grad" href="/home" >ShipTeo</a>
-          <div class=" navbar-collapse" id="navbarNavAltMarkup" >
-            <div class="navbar-nav">
-{#            <a class="nav-link" href="/service">Services</a>#}
-                <a class="nav-link" href="/ops/dashboard">Warehouse</a>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>ShipTeo</title>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+        <a class="navbar-brand tateomerch_logo_grad" href="/home">ShipTeo</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavDropdown">
+            <ul class="navbar-nav">
+                <!-- Warehouse Dropdown -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Warehouse
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                        <li><a class="dropdown-item" href="/ops/warehouse/dashboard/">Dashboard</a></li>
+                        <li><a class="dropdown-item" href="/ops/warehouse/order/">Orders</a></li>
+                        <li><a class="dropdown-item" href="/ops/warehouse/2/inventory/">Inventory</a></li>
+                        <li><a class="dropdown-item" href="/ops/warehouse/2/runrates/">Run Rates</a></li>
+                    </ul>
+                </li>
+                <!-- Additional Nav Links Here -->
                 {% if user.is_merch %}
-              <a class="nav-link" href="/merch/dashboard">Merch</a>
+                <li class="nav-item"><a class="nav-link" href="/merch/dashboard">Merch</a></li>
                 {% endif %}
-            {% if user.is_rsr %}
-                <a class="nav-link" href="/ops/dashboard">Warehouse</a>
-              <a class="nav-link" href="/rsr/route-review">Route</a>
-{#              <a class="nav-link" href="/rsr/orderform">Order</a>#}
-            {% endif %}
-            </div>
-          </div>
-
-        {% if user.is_authenticated %}
-        <div class="btn-group">
-            <button type="button" class="btn dropdown-toggle" data-bs-toggle='dropdown' aria-haspopup="true" aria-expanded="false">
+                {% if user.is_rsr %}
+                <li class="nav-item"><a class="nav-link" href="/rsr/route-review">Route</a></li>
+                {% endif %}
+            </ul>
+            <!-- Authentication Links -->
+            {% if user.is_authenticated %}
+            <div class="dropdown ms-auto">
+                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
                     Account
-            </button>
-            <div class="dropdown-menu dropdown-menu-end">
-                <a class="dropdown-item" href="{% url 'account:view' user_id=user.id %}">Settings</a>
-                <div class="dropdown-divider"></div>
-                <a class="dropdown-item" href="/logout">Logout</a>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton">
+                    <li><a class="dropdown-item" href="{% url 'account:view' user_id=user.id %}">Settings</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="/logout">Logout</a></li>
+                </ul>
             </div>
+            {% else %}
+            <div class="ms-auto">
+                <a class="btn btn-primary" href="{% url 'account:login' %}">Login</a>
             </div>
+            {% endif %}
         </div>
-        {% else %}
-            <div class="btn-group" style="margin-right: 15px">
-                    <button type="button" class="btn dropdown-toggle" data-bs-toggle='dropdown' aria-haspopup="true" aria-expanded="false">
-                            Account
-                    </button>
-                <div class="dropdown-menu dropdown-menu-end">
-                    <a class="dropdown-item" href="{% url 'account:login' %}">
-                        Login
-                    </a>
-                    {% if user.is_authenticated %}
-                    <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="{% url 'account:view' user.id %}">
-                        Account
-                    </a>
-                        {% endif %}
-                </div>
-            </div>
-        {% endif %}
-    </nav>
+    </div>
+</nav>
 
-  {% block content %}
+{% block content %}
+{% endblock content %}
 
-  {% endblock content %}
-
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
 </html>

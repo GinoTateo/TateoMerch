@@ -1,4 +1,5 @@
 from _pydecimal import getcontext
+from datetime import datetime, timedelta
 
 import pandas as pd
 from django import template
@@ -405,23 +406,29 @@ def WarehouseManagerOrderStatusDetail(request, order_id):
     return render(request, 'OrderStatusDetail.html', {'order': order})
 
 
-from django.shortcuts import render
-
-
 def orders_view(request):
-    email = "GJTat901@gmail.com"
-    password = "xnva kbzm flsa szzo"
-    uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
-    client = MongoClient(uri)
-
-    email_parse_util.check_and_parse_new_emails(email, password, client, 'mydatabase', 'orders')
-
     uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
     client = MongoClient(uri)
     db = client['mydatabase']
     collection = db['orders']
 
-    orders = list(collection.find())
+    # Getting filter parameters from the request
+    date = request.GET.get('date')
+    status = request.GET.get('status')
+    route = request.GET.get('route')
+
+    # Building the query based on the filters
+    query = {}
+    if date:
+        start_of_day = datetime.fromisoformat(date)
+        end_of_day = start_of_day + timedelta(days=1)
+        query['pick_up_date'] = {"$gte": start_of_day, "$lt": end_of_day}
+    if status:
+        query['status'] = status
+    if route:
+        query['route'] = route
+
+    orders = list(collection.find(query))
 
     # Renaming '_id' field to 'order_id' for each order
     for order in orders:
@@ -431,7 +438,7 @@ def orders_view(request):
     orders.reverse()
 
     # You can now pass these orders to your template or process them further
-    return render(request, 'mongoOrdersInOrder.html', {'orders': orders})
+    return render(request, 'orders/order_view.html', {'orders': orders})
 
 
 from pymongo import MongoClient
@@ -468,7 +475,7 @@ def complete_order(request, order_id):
         return HttpResponse("Error connecting to database", status=500)
 
     client.close()
-    return redirect()
+    return redirect("ops:orderview")
 
 
 def order_detail_view(request, order_id):
@@ -479,48 +486,41 @@ def order_detail_view(request, order_id):
         db = client['mydatabase']
         collection = db['orders']
         order = collection.find_one({'_id': ObjectId(order_id)})
+
     except Exception as e:
         print(f"An error occurred: {e}")
-        # Optionally, return an error response or handle the error as appropriate
         return HttpResponse("Error connecting to database", status=500)
 
-    collection = db['orders']
-
-    order = collection.find_one({'_id': ObjectId(order_id)})
-
-    # Fetch OOS
+    # Fetch Out of Stock (OOS) items
     OOS_items = OutOfStockItem.objects.all().values_list('item_number', flat=True)
-    OOS = list(OOS_items)
 
-    # Reformat the orders array and check stock status
-    if order and 'orders' in order:
-        reformatted_orders = []
-        for item in order['orders']:
-            item_number = item.get('Item Number', '')
-            in_stock = item_number not in OOS
-
-            reformatted_item = {
-                'ItemNumber': item_number,
-                'ItemDescription': item.get('Item Description', ''),
-                'Quantity': item.get('Quantity', ''),
-                'InStock': in_stock
-            }
-            reformatted_orders.append(reformatted_item)
-        order['orders'] = reformatted_orders
 
     client.close()
     return render(request, 'order_detail.html', {'order': order})
-
 
 def generate_order_pdf(request, order_id):
     uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
     client = MongoClient(uri)
     db = client['mydatabase']
     collection = db['orders']
+    oos_items_collection = db['oos_items']
+    mapped_items_collection = db['mapped_items']
 
-    # Fetch OOS
-    OOS_items = OutOfStockItem.objects.all().values_list('item_number', flat=True)
-    OOS = list(OOS_items)
+    # Fetch OOS items
+    oos_items_cursor = oos_items_collection.find({})
+    oos_items = [doc["ItemNumber"] for doc in oos_items_cursor]
+
+    # Initialize dictionaries
+    item_to_location = {}
+    item_to_type = {}
+
+    # Fetch location and type mappings from the 'mapped_items' collection in one go
+    for doc in mapped_items_collection.find({}):
+        item_number = doc["ItemNumber"]
+        item_to_location[item_number] = doc.get("Location", "N/A")
+        item_to_type[item_number] = doc.get("Type", "N/A")  # Assuming 'Type' is the correct field name
+
+
 
     ship_to_routes = [
         "RTC000003", "RTC00013", "RTC000018", "RTC000019", "RTC000089",
@@ -541,23 +541,24 @@ def generate_order_pdf(request, order_id):
     adjusted_total_quantity = 0
 
     # Calculate totals
-    for item in order.get('orders', []):
+    for item in order.get('items', []):
         quantity = int(item.get('Quantity', 0))
         total_quantity += quantity
-        if item.get('Item Number', '') not in OOS:
+        if item.get('ItemNumber', '') not in oos_items:
             adjusted_total_quantity += quantity
 
     # Header setup with bold font
     # Set font to Helvetica-Bold for headers
+    tid = order.get("transfer_id")
     p.drawString(30, height - 30, "Pick List")
     p.setFont("Helvetica-Bold", 12)
     route_number = order.get('route', 'N/A')
     route_type = "Ship-to" if route_number in ship_to_routes else "Pick-up"
-    p.drawString(30, height - 50, f"Route Number: {route_number} ({route_type})")
+    p.drawString(30, height - 50, f"Route Number: {route_number} ({route_type}) ")
     p.setFont("Helvetica", 12)
 
-    formatted_date = order.get('date', 'N/A').strftime('%m/%d/%Y') if order.get('date') else 'N/A'
-    p.drawString(30, height - 70, f"Date: {formatted_date}")
+    formatted_date = order.get('pick_up_date', 'N/A')
+    p.drawString(30, height - 70, f"Transfer ID: {tid} - ({formatted_date})")
     p.drawString(30, height - 90, f"Total Quantity Ordered: {total_quantity}")
     p.drawString(30, height - 110, f"Adjusted Total: {adjusted_total_quantity} +/- ")
     p.rect(160, height - 112, 25, 15)  # Scan count box
@@ -568,11 +569,13 @@ def generate_order_pdf(request, order_id):
     y_position = height - 160
 
     p.setFont("Helvetica-Bold", 12)
-    # Column headers
+    # Draw column headers, including a new column for 'Location'
     p.drawString(30, y_position, "Item Number")
     p.drawString(150, y_position, "Description")
-    p.drawString(350, y_position, "Quantity")
-    p.drawString(450, y_position, "")  # Adjustment quantity column
+    p.drawString(340, y_position, "Quantity")
+    # Adjust existing columns to make room for the new 'Location' column
+    p.drawString(420, y_position, "Type")  # New location column
+    p.drawString(470, y_position, "Location")  # New location column
     p.drawString(530, y_position, "Stock Status")
     p.drawString(630, y_position, "Check")  # Checkboxes moved to the far right
 
@@ -582,15 +585,16 @@ def generate_order_pdf(request, order_id):
     # Adjust y_position for first item row
     y_position -= 20
 
-    for item in order.get('orders', []):
+    for item in order.get('items', []):
+
 
         # Draw a line to separate this item from the next
         p.line(30, y_position - 2, 580, y_position - 2)  # Adjust line length as needed
 
-        item_number = item.get('Item Number', 'Unknown')
-        description = item.get('Item Description', 'N/A')
+        item_number = item.get('ItemNumber', 'Unknown')
+        description = item.get('ItemDescription', 'N/A')
         quantity = item.get('Quantity', 0)
-        stock_status = "IS" if item_number not in OOS else "OOS"
+        stock_status = "IS" if item_number not in oos_items else "OOS"
 
         # Drawing item details (keep this part unchanged)
         p.drawString(30, y_position, str(item_number))
@@ -604,10 +608,19 @@ def generate_order_pdf(request, order_id):
             # Draw a line through the quantity text
             p.line(350, y_position + 4, 350 + quantity_text_width, y_position + 4)
 
+        item_type = item_to_type.get(item_number, "N/A")  # Fetch the type
+        p.drawString(420, y_position, item_type)
+
+        # Draw the location next to each item
+        item_location = item_to_location.get(item_number, "N/A")
+        p.drawString(485, y_position, item_location)
+
         # Draw the placeholder box for adjustment quantity, stock status, and checkbox
-        p.rect(450, y_position - 2, 30, 15)  # Placeholder box for adjustment quantity
+        p.rect(370, y_position - 2, 30, 15)  # Placeholder box for adjustment quantity
         p.drawString(530, y_position, stock_status)  # Include stock status
         p.rect(630, y_position - 2, 12, 12, stroke=1, fill=0)  # Checkbox
+
+
 
         # Move to the next line
         y_position -= 20
@@ -624,42 +637,30 @@ def generate_order_pdf(request, order_id):
 
 def inventory_view(request, warehouse_id):
     try:
+        # MongoDB connection
         uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
         client = MongoClient(uri)
         db = client['mydatabase']
-        inventory_collection = db['inventory']
-        items_collection = db['items']
 
         # Fetch the latest inventory
-        latest_inventory = inventory_collection.find().sort("_id", -1).limit(1)
-        latest_inventory = list(latest_inventory)
+        inventory_collection = db['inventory']
+        latest_inventory = inventory_collection.find_one(sort=[("_id", -1)])
 
-        if latest_inventory:
-            inventory_items = latest_inventory[0]['items']
-        else:
-            inventory_items = []
+        inventory_items = latest_inventory['items'] if latest_inventory else []
 
-        # Fetch all items from the items collection
-        all_items = list(items_collection.find({}, {'ItemNumber': 1, 'ItemDescription': 1}))
-
-        # Initialize the Out of Stock items list
-        OOS_items = []
-
-        # Create a set of ItemNumbers from the latest inventory for faster lookup
-        inventory_item_numbers = {item['ItemNumber'] for item in inventory_items if 'ItemNumber' in item}
-
-        # Check each item in all_items to see if its ItemNumber is missing from the latest inventory
-        for item in all_items:
-            if 'ItemNumber' in item and item['ItemNumber'] not in inventory_item_numbers:
-                OOS_items.append(item)
+        # Fetch Out-of-Stock items directly from oos_items collection
+        oos_items_collection = db['oos_items']
+        OOS_items = list(oos_items_collection.find({}, {'ItemNumber': 1, 'ItemDescription': 1}))
 
     except Exception as e:
         print(f"An error occurred: {e}")
         return HttpResponse("Error connecting to database", status=500)
 
-        # Include OOS_items in the context passed to the template
-    return render(request, 'inventory/inventory_list.html',
-                  {'inventory_items': inventory_items, 'OOS_items': OOS_items})
+    # Render the inventory list template, passing both inventory items and OOS items
+    return render(request, 'inventory/inventory_list.html', {
+        'inventory_items': inventory_items,
+        'OOS_items': OOS_items
+    })
 
 
 def verify_order(request, order_id):
@@ -667,47 +668,54 @@ def verify_order(request, order_id):
         uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
         client = MongoClient(uri)
         db = client['mydatabase']
-
         orders_collection = db['orders']
-        transfers_collection = db['Transfers']
+        transfers_collection = db['transfers']
+        oos_items_collection = db['oos_items']
 
+        # Correct fetching of OOS item numbers
+        oos_items_docs = list(oos_items_collection.find({}, {'ItemNumber': 1}))
+        oos_item_numbers = {doc['ItemNumber'] for doc in oos_items_docs}  # Set of OOS item numbers for efficient lookup
+
+        # Fetch the order and corresponding transfer
         order = orders_collection.find_one({'_id': ObjectId(order_id)})
-        if not order:
-            return JsonResponse({"error": "Order not found"}, status=404)
+        matching_transfer = transfers_collection.find_one(
+            {"transfer_id": {"$regex": ".*" + str(order['_id'])[-4:] + "$"}})
 
-        order_id_str = str(order['_id'])
-        last_4_digits = order_id_str[-4:]
+        if not order or not matching_transfer:
+            return JsonResponse({"error": "Order or matching transfer not found"}, status=404)
 
-        matching_transfer = transfers_collection.find_one({"transfer_id": {"$regex": ".*" + last_4_digits + "$"}})
-        if not matching_transfer:
-            return JsonResponse({"error": "No matching transfer found"}, status=404)
+        # Initialize a list for items with quantity variances excluding OOS items
+        items_with_variances = []
 
+        # Logic for comparing order items against transfer quantities and checking OOS status
         order_items = order.get('items', [])
-        transfer_items = matching_transfer.get('items', [])
+        transfer_quantities = {item['ItemNumber']: int(item['Quantity']) for item in matching_transfer.get('items', [])}
 
-        # Assuming each item is a dictionary with an 'item_name' key
-        non_matching_items = [item['item_name'] for item in order_items if item not in transfer_items]
+        for item in order_items:
+            item_number = item['ItemNumber']
+            if item_number in oos_item_numbers:
+                continue  # Skip OOS items
 
-        response_data = {
-            "order": json.loads(json_util.dumps(order)),
-            "transfer": json.loads(json_util.dumps(matching_transfer)),
-        }
+            order_quantity = int(item['Quantity'])
+            transfer_quantity = transfer_quantities.get(item_number, 0)
 
-        if not non_matching_items:
-            response_data["message"] = "Order and transfer items match."
-            status_code = 200
-        else:
-            non_matching_items_str = ", ".join(non_matching_items)
-            response_data[
-                "message"] = f"Order and transfer items do not match. Non-matching items: {non_matching_items_str}"
-            response_data["non_matching_items"] = non_matching_items
-            status_code = 400
+            if order_quantity != transfer_quantity:
+                variance = transfer_quantity - order_quantity
+                items_with_variances.append({
+                    'ItemNumber': item_number,
+                    'ItemDescription': item.get('ItemDescription', ''),
+                    'OrderQuantity': order_quantity,
+                    'TransferQuantity': transfer_quantity,
+                    'Variance': variance,
+                    'IsOOS': item_number in oos_item_numbers
+                })
 
-        return JsonResponse(response_data, status=status_code, safe=False)
-
+        # Render the template with items_with_variances
+        return render(request, 'order_verification.html', {
+            'items_with_variances': items_with_variances, 'order': order
+        })
     except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
-
+        return render(request, 'error_page.html', {'error': str(e)})
 
 @require_http_methods(["GET", "POST"])
 def place_order_view(request):
@@ -854,14 +862,14 @@ def inventory_with_6week_avg(request, warehouse_id):
         items_with_avg = []
         for inventory_item in inventory_items:
             item_name = inventory_item.get('ItemName')
-            item_data = items_collection.find_one({'Item Description': item_name})
+            item_data = items_collection.find_one({'ItemDescription': item_name})
             if item_data:
-                six_week_avg = -item_data.get('6 week average')
+                six_week_avg = -item_data.get('AVG', 0)
 
                 comparison = 'Higher' if int(inventory_item.get('Cases', 0)) > six_week_avg else 'Lower'
                 items_with_avg.append({
                     'ItemName': item_name,
-                    'ItemNumber': item_data.get('Item Number'),
+                    'ItemNumber': item_data.get('ItemNumber'),
                     'Cases': inventory_item.get('Cases', 'N/A'),
                     'sixAvg': six_week_avg,
                     'Comp': comparison
@@ -886,20 +894,19 @@ def inventory_visualization_view(request, warehouse_id):
     items_data = list(items_collection.find())
 
     # Initialize DataFrame columns
-    data = {'Item Number': [], 'Item Type': [], 'Item Description': [], 'Transferred Items': []}
+    data = {'Item Number': [],  'Item Description': [], 'Transferred Items': []}
 
     # Populate DataFrame with data for the selected week
     for item in items_data:
         week_value = item.get(selected_week, 0) if selected_week in item else 0
-        data['Item Number'].append(item['Item Number'])
-        data['Item Type'].append(item['Item Type'])
-        data['Item Description'].append(item['Item Description'])
+        data['Item Number'].append(item['ItemNumber'])
+        data['Item Description'].append(item['ItemDescription'])
         data['Transferred Items'].append(abs(week_value))  # Use absolute value for transferred items
 
     df = pd.DataFrame(data)
 
     # Create visualization with Plotly
-    fig = px.bar(df, x='Item Description', y='Transferred Items', color='Item Type',
+    fig = px.bar(df, x='Item Description', y='Transferred Items',
                  title=f'Transfers for {selected_week}')
     plot_div = fig.to_html(full_html=False)
 
@@ -919,14 +926,13 @@ def weekly_trend_view(request, warehouse_id, item_type):
     items_data = list(items_collection.find())
 
     # Initialize DataFrame columns
-    data = {'Item Number': [], 'Item Type': [], 'Item Description': [], 'Transferred Items': []}
+    data = {'ItemNumber': [], 'Item Description': [], 'Transferred Items': []}
 
     # Populate DataFrame with data for the selected week
     for item in items_data:
         week_value = item.get(selected_week, 0) if selected_week in item else 0
-        data['Item Number'].append(item['Item Number'])
-        data['Item Type'].append(item['Item Type'])
-        data['Item Description'].append(item['Item Description'])
+        data['ItemNumber'].append(item['ItemNumber'])
+        data['ItemDescription'].append(item['ItemDescription'])
         data['Transferred Items'].append(abs(week_value))  # Use absolute value for transferred items
 
     df = pd.DataFrame(data)
