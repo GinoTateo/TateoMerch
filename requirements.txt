@@ -21,7 +21,6 @@ pillow-heif==0.7.2
 pycparser==2.21
 pytz==2022.6
 pyzbar==0.1.9
-sqlparse==0.4.3
 threadpoolctl==3.1.0
 urllib3==1.26.14
 whitenoise==6.2.0
