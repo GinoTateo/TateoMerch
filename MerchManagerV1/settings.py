@@ -11,9 +11,10 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 import os
 from pathlib import Path
-
+from celery.schedules import crontab
 import cloudinary
 import dj_database_url
+from celery import Celery
 from django.contrib import staticfiles
 from django.contrib.messages import constants as messages
 from cloudinary.uploader import upload
@@ -31,8 +32,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY', default='your secret key')
 
+
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+
+
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['127.0.0.1', 'https://shipteo.onrender.com/', 'shipteo.onrender.com', 'shipteo.com',
                  'https://www.shipteo.com/', 'www.shipteo.com', "192.168.5.70"]
@@ -46,6 +51,7 @@ INSTALLED_APPS = [
     'account',
     'rsr',
     'operations',
+    'MerchManagerV1',
 
     # Third party apps
     'django.contrib.admin',
@@ -58,6 +64,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'django_filters',
     'cloudinary',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -196,5 +203,18 @@ MESSAGE_TAGS = {
 }
 
 
-# def MONGO_URI():
-    # return "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'MerchManagerv1.settings')
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'MerchManagerV1.settings')
+
+app = Celery('MerchManagerV1')
+app.config_from_object('django.conf:settings', namespace='CELERY')
+app.autodiscover_tasks()
+
+CELERY_BEAT_SCHEDULE = {
+    'run_my_task_within_specific_hours': {
+        'task': 'MerchManagerV1.tasks.my_task',
+        'schedule': crontab(minute='*/5', hour='5-14', day_of_week='*'),
+        'args': (),
+    },
+}

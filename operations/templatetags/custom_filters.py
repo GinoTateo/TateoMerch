@@ -10,3 +10,11 @@ def to_int(value):
         return int(value) if value == int(value) else value
     except (ValueError, TypeError):
         return value
+
+
+@register.filter(name='weeks_of_supply_class')
+def weeks_of_supply_class(weeks_of_supply):
+    if weeks_of_supply >= 2:
+        return 'text-higher'
+    else:
+        return 'text-lower'

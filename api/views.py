@@ -1,5 +1,10 @@
+import json
+
 from django.contrib.auth import login
-from django.http import request
+from django.http import request, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from pymongo import MongoClient
 from rest_framework import permissions, status, generics, viewsets
 from rest_framework import views
 from rest_framework.decorators import api_view
@@ -97,3 +102,39 @@ def CreateDocketView(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# @require_POST
+# @csrf_exempt  # Use this cautiously and consider CSRF protection
+# def update_item(request):
+#     try:
+#         data = json.loads(request.body.decode('utf-8'))
+#         order_id = data['order_id']
+#         item_id = data['item_id']
+#         quantity = data['quantity']
+#         inStock = data['inStock'] == 'true'
+#     except Exception as e:
+#         return JsonResponse({"error": str(e)}, status=500)
+#
+#     try:
+#         uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
+#         client = MongoClient(uri)
+#         db = client['mydatabase']
+#         collection = db['orders']
+#
+#         result = collection.update_one(
+#             {'_id': order_id, 'items.ItemNumber': item_id},
+#             {'$set': {'items.$.Quantity': quantity}}
+#             # For updating InStock as well, add it to the $set dict
+#             # , 'items.$.InStock': inStock
+#         )
+#
+#         client.close()
+#
+#         if result.modified_count:
+#             return JsonResponse({"message": "Item updated successfully"})
+#         else:
+#             return JsonResponse({"error": "Item not found or no update needed."}, status=404)
+#
+#     except Exception as e:
+#         return JsonResponse({"error": str(e)}, status=500)

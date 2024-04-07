@@ -1,53 +1,287 @@
 import email as email_lib
+
+from dotenv import load_dotenv
 from pymongo import MongoClient
-import imaplib
 from email import policy
 from email.parser import BytesParser
 from bs4 import BeautifulSoup
-import re
 from datetime import datetime
+import imaplib
+import email
+import re
+from email.policy import default
+import fitz  # PyMuPDF
+import os
 
-def fetch_last_email_content(email_address, password):
-    """
-    Connects to a Gmail account and fetches the content of the last email in the inbox.
 
-    :param email_address: Your Gmail email address.
-    :param password: Your Gmail password or app-specific password.
-    :return: Raw email content of the last email.
+email_address = os.getenv("email_address")
+password = os.getenv("password")
+uri = os.getenv("uri")
+
+
+def is_inventory_email(raw_email):
     """
+    Checks if the email is an inventory email based on the attachment filenames.
+
+    Args:
+        raw_email (bytes): The raw email content.
+
+    Returns:
+        bool: True if the email is an inventory email, False otherwise.
+    """
+    # Parse the raw email content
+    email_message = BytesParser(policy=policy.default).parsebytes(raw_email)
+
+
+    # Check all parts of the email
+    for part in email_message.iter_attachments():
+        # Try to get the filename of the attachment
+        filename = part.get_filename()
+        if filename:
+            # Check if the filename matches the inventory email pattern
+            if re.match(r"901\.901_InventoryStatus_\d{8}_\d{6}\.pdf", filename):
+                return True
+
+    return False
+
+
+def is_order_email(raw_email):
+    """
+    Determines if an email subject line indicates an order email.
+
+    Args:
+        raw_email (bytes): The raw email content in bytes.
+
+    Returns:
+        bool: True if the subject line matches the order email pattern, False otherwise.
+    """
+    # Parse the raw email content to get the email object
+    email_message = BytesParser(policy=policy.default).parsebytes(raw_email)
+
+    # Extract the subject from the email object
+    subject_header = email_message['Subject']
+    subject = str(email.header.make_header(email.header.decode_header(subject_header)))
+
+    # Define the substring to look for in the subject line for order emails
+    order_subject_substring = "concord peet's route replenishment submission"
+
+    # Check if the subject line (in lowercase) contains the specified order subject substring (also in lowercase)
+    return order_subject_substring.lower() in subject.lower()
+
+
+def is_transfer_email(raw_email):
+    """
+    Checks if the email is a transfer email based on the attachment filenames.
+
+    Args:
+        raw_email (bytes): The raw email content.
+
+    Returns:
+        bool: True if the email is a transfer email, False otherwise.
+    """
+    # Parse the raw email content
+    email_message = BytesParser(policy=policy.default).parsebytes(raw_email)
+
+    # Check all parts of the email for attachments
+    for part in email_message.iter_attachments():
+        # Try to get the filename of the attachment
+        filename = part.get_filename()
+        if filename:
+            # Check if the filename matches the transfer email pattern
+            if filename.startswith("901.901_TruckTransferOut_"):
+                return True
+
+    return False
+
+
+def insert_order_into_mongodb(extracted_data, client, db_name='mydatabase', orders_collection='orders'):
+    """
+    Inserts the order details into a MongoDB collection.
+
+    :param extracted_data: The data to be inserted, including the order details.
+    :param client: MongoDB client instance.
+    :param db_name: The name of the database.
+    :param orders_collection: The name of the collection for orders.
+    """
+    # Check if the necessary data is available
+    if not extracted_data['items']:
+        print("Missing items in order details.")
+        return
+
+    # Prepare the document to be inserted
     try:
-        # Connect to Gmail's IMAP server
-        mail = imaplib.IMAP4_SSL('imap.gmail.com')
-        mail.login(email_address, password)
-        mail.select('inbox')
+        pick_up_date = datetime.today()
+    except ValueError as e:
+        print(f"Error parsing pick_up_date: {e}")
+        pick_up_date = None
 
-        # Search for all emails in the inbox
-        status, email_ids = mail.search(None, 'ALL')
-        if status != 'OK':
-            print("No emails found!")
-            return None
+    order_document = {
+        'route_name': extracted_data.get('route_name'),
+        'route': extracted_data.get('route'),
+        'pick_up_date': pick_up_date,
+        'pick_up_time': extracted_data.get('pick_up_time'),
+        'total_cases': extracted_data.get('total_cases'),
+        'items': extracted_data['items'],  # Assuming items is a list of dictionaries
+        'status': "Pending",
+    }
 
-        # Fetch the last email ID
-        last_email_id = email_ids[0].split()[-1]
-        status, email_data = mail.fetch(last_email_id, '(RFC822)')
-        if status != 'OK':
-            print("Failed to fetch the email.")
-            return None
+    # Select the database and collection
+    db = client[db_name]
+    orders_col = db[orders_collection]
 
-        raw_email = email_data[0][1]
+    # Insert the document into the orders collection
+    result = orders_col.insert_one(order_document)
+    print(f"Order data inserted with record id: {result.inserted_id}")
 
-        # Close the connection and logout
-        mail.close()
-        mail.logout()
+    # Generate transfer_ID (e.g., using the last 4 characters of the MongoDB _id)
+    transfer_id = str(result.inserted_id)[-4:]
 
-        return raw_email, last_email_id.decode()
+    # Update the document with the transfer_ID
+    orders_col.update_one({'_id': result.inserted_id}, {'$set': {'transfer_id': transfer_id}})
+
+    print(f"Order updated with transfer_id: {transfer_id}")
+
+
+def insert_inventory_to_mongodb(inventory_data):
+    uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
+    client = MongoClient(uri)
+    db = client['mydatabase']
+    collection = db['inventory']
+
+    if inventory_data and inventory_data['items']:  # Ensure there are items to save
+        result = collection.insert_one(inventory_data)
+        print(f"Inventory data inserted with record id: {result.inserted_id}")
+    else:
+        print("No inventory items to save.")
+
+    client.close()
+
+def parse_inventory_pdf(pdf_bytes):
+    inventory_data = {'items': []}
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    text = ""
+    for page in doc:
+        text += page.get_text("text")
+    doc.close()
+
+    lines = text.split('\n')
+    item_pattern = re.compile(r'^(\d+) - (\w[\w\s.-]+)')
+    # Adjusted to consider the next line after item name for "Case" or "Each"
+    quantity_pattern = re.compile(r'^\s*(Case|Each)\s+(\d+)')
+
+    current_item = {}
+    skip_next_line = False  # Flag to skip processing for quantity lines
+
+    for i, line in enumerate(lines):
+        if skip_next_line:
+            skip_next_line = False
+            continue
+
+        item_match = item_pattern.match(line)
+        if item_match:
+            # Finalize and save the previous item
+            if current_item:
+                inventory_data['items'].append(current_item)
+                current_item = {}
+
+            # Initialize new item
+            current_item = {
+                'ItemNumber': int(item_match.group(1)),
+                'ItemName': item_match.group(2),
+                'Cases': None,
+                'Eaches': None
+            }
+
+            # Check if next line contains "Case" or "Each" quantity
+            if i + 1 < len(lines):
+                next_line = lines[i + 1]
+                quantity_match = quantity_pattern.match(next_line)
+                if quantity_match:
+                    quantity_type, quantity = quantity_match.groups()
+                    if quantity_type == "Case":
+                        current_item['Cases'] = quantity
+                    elif quantity_type == "Each":
+                        current_item.clear()
+                    skip_next_line = True  # Skip the next line as it has been processed
+
+    # Add the last item if it exists
+    if current_item.get('ItemNumber'):  # Corrected from 'Item number' to 'ItemNumber'
+        inventory_data['items'].append(current_item)
+
+    return inventory_data
+
+
+def extract_pdf_attachments(raw_email):
+    email_message = email.message_from_bytes(raw_email, policy=default)
+    attachments = []
+
+    for part in email_message.walk():
+        if part.get_content_maintype() == 'application' and part.get_content_subtype() == 'pdf':
+            filename = part.get_filename()
+            if filename:
+                content = part.get_payload(decode=True)
+                attachments.append((filename, content))
+
+    return attachments
+
+
+def identify_and_upload_oos_items():
+    try:
+        uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
+        client = MongoClient(uri)
+        db = client['mydatabase']
+
+        # Collections
+        inventory_collection = db['inventory']
+        items_collection = db['items']
+        oos_items_collection = db['oos_items']  # Collection for out-of-stock items
+
+        # Fetch the latest inventory
+        latest_inventory = inventory_collection.find_one(sort=[("_id", -1)])
+        if not latest_inventory:
+            print("No inventory found")
+            return
+
+        # Extract item numbers from the latest inventory
+        inventory_item_numbers = {item['ItemNumber'] for item in latest_inventory['items']}
+
+        # Fetch all items that are considered active or relevant from items collection
+        all_items = list(items_collection.find({}, {'ItemNumber': 1, 'ItemDescription': 1, 'Grand Total': 1}))
+
+        # Delete all existing documents in oos_items_collection before uploading new ones
+        oos_items_collection.delete_many({})
+
+        # Identify OOS items
+        oos_items = []
+        for item in all_items:
+            if item['ItemNumber'] not in inventory_item_numbers and item.get('Grand Total', 0) < 0:
+                # Adding only relevant fields to OOS items list
+                item_number = int(float(item['ItemNumber']))  # Convert to float first, then to int to handle .0
+                oos_item = {
+                    'ItemNumber': str(item_number),  # Convert integer back to string
+                    'ItemDescription': item.get('ItemDescription', ''),
+                }
+                oos_items.append(oos_item)
+
+        # Upload OOS items to MongoDB, if any
+        if oos_items:
+            result = oos_items_collection.insert_many(oos_items)
+            print(f"Uploaded {len(result.inserted_ids)} OOS items to MongoDB.")
+        else:
+            print("No OOS items to upload.")
+
     except Exception as e:
         print(f"An error occurred: {e}")
-        return None
 
 
-# Example usage
-# email_content = fetch_last_email_content('your_email@gmail.com', 'your_password')
+def process_inventory_email(raw_email, client):
+    attachments = extract_pdf_attachments(raw_email)
+    for filename, content in attachments:
+        inventory_data = parse_inventory_pdf(content)
+        if inventory_data:
+            insert_inventory_to_mongodb(inventory_data)
+            identify_and_upload_oos_items()
+
 
 def parse_email_content(email_content):
     msg = BytesParser(policy=policy.default).parsebytes(email_content)
@@ -154,101 +388,178 @@ def parse_email_content(email_content):
 
     return extracted_data
 
-# Example usage
-# raw_email_content = fetch_last_email_content('your_email@gmail.com', 'your_password')
-# parsed_data = parse_email(raw_email_content)
+
+def process_order_email(raw_email, client):
+    parsed_data = parse_email_content(raw_email)
+    if parsed_data:
+        insert_order_into_mongodb(parsed_data, client)
 
 
-def insert_order_into_mongodb(extracted_data, client, db_name='mydatabase', orders_collection='orders'):
-    """
-    Inserts the order details into a MongoDB collection.
+def extract_pdf_attachments_and_body(raw_email):
+    email_message = email.message_from_bytes(raw_email, policy=default)
+    attachments = []
+    body_text = ""
 
-    :param extracted_data: The data to be inserted, including the order details.
-    :param client: MongoDB client instance.
-    :param db_name: The name of the database.
-    :param orders_collection: The name of the collection for orders.
-    """
-    # Check if the necessary data is available
-    if not extracted_data['items']:
-        print("Missing items in order details.")
-        return
+    if email_message.is_multipart():
+        for part in email_message.walk():
+            content_type = part.get_content_type()
+            content_disposition = str(part.get("Content-Disposition"))
 
-    # Prepare the document to be inserted
-    try:
-        pick_up_date = datetime.today()
-    except ValueError as e:
-        print(f"Error parsing pick_up_date: {e}")
-        pick_up_date = None
+            if content_type == 'text/plain' and 'attachment' not in content_disposition:
+                body_text = part.get_payload(decode=True).decode()  # Decode byte to str
+            elif part.get_content_maintype() == 'application' and part.get_content_subtype() == 'pdf':
+                filename = part.get_filename()
+                if filename:
+                    content = part.get_payload(decode=True)
+                    attachments.append((filename, content))
+    else:  # Not a multipart
+        body_text = email_message.get_payload(decode=True).decode()
 
-    order_document = {
-        'route_name': extracted_data.get('route_name'),
-        'route': extracted_data.get('route'),
-        'pick_up_date': pick_up_date,
-        'pick_up_time': extracted_data.get('pick_up_time'),
-        'total_cases': extracted_data.get('total_cases'),
-        'items': extracted_data['items'],  # Assuming items is a list of dictionaries
-        'status': "Received",
+    return attachments, body_text
+
+
+# Extract 4-digit code from email body
+def extract_transfer_id_from_body(body_text):
+    # Debug print to check the actual body text received
+    print("DEBUG - Email Body Text:", body_text[:500])  # Print the first 500 characters for inspection
+
+    # Adjusted regex to match a 4-character combination of letters and digits
+    # This regex looks for a pattern with exactly 4 characters, each can be a letter (a-zA-Z) or a digit (\d)
+    match = re.search(r'\b[a-zA-Z\d]{4}\b', body_text)
+    if match:
+        print("DEBUG - Found Transfer ID:", match.group(0))
+        return match.group(0)
+    else:
+        print("DEBUG - No Transfer ID found")
+        return None
+
+
+# Parse PDF for transfer information
+
+def parse_transfer_pdf(pdf_content):
+    transfer_data = {
+        'transfer_id': None,
+        'route_number': None,
+        'date': None,
+        'user': None,
+        'destination_route': None,
+        'items': [],
+        'primary_total': 0,
+        'secondary_total': 0
     }
 
-    # Select the database and collection
-    db = client[db_name]
-    orders_col = db[orders_collection]
+    doc = fitz.open("pdf", pdf_content)
+    text = ""
+    for page in doc:
+        text += page.get_text()
+    doc.close()
 
-    # Insert the document into the orders collection
-    result = orders_col.insert_one(order_document)
-    print(f"Order data inserted with record id: {result.inserted_id}")
+    lines = text.split('\n')
 
-    # Generate transfer_ID (e.g., using the last 4 characters of the MongoDB _id)
-    transfer_id = str(result.inserted_id)[-4:]
+    # Extracting date, route, user, and destination route
+    transfer_data['date'] = lines[0].split('Printed on:')[1].split()[0]
+    route_parts = lines[0].split('Route:')[1].strip().split(' - ')
+    transfer_data['route_number'] = route_parts[1] if len(route_parts) > 1 else route_parts[0]
 
-    # Update the document with the transfer_ID
-    orders_col.update_one({'_id': result.inserted_id}, {'$set': {'transfer_id': transfer_id}})
+    transfer_data['user'] = lines[1].split('User:')[1].strip()
 
-    print(f"Order updated with transfer_id: {transfer_id}")
+    for line in lines:
+        if "Destination Route:" in line:
+            transfer_data['destination_route'] = line.split("Destination Route:")[1].strip()
+            break
+
+    item_lines_started = False
+    for line in lines:
+        if "Destination Route" in line or "Item # Description UOM Transfer" in line:
+            continue
+
+        if "Total Quantity Primary" in line:
+            try:
+                # The \s+ accounts for one or more whitespace characters
+                transfer_data['primary_total'] = int(re.search(r"Total Quantity Primary\s+(\d+)", line).group(1))
+            except (ValueError, AttributeError):
+                print("Could not parse primary total from line:", line)
+
+        if "Total Quantity Secondary" in line:
+            try:
+                # Similarly, for secondary total
+                transfer_data['secondary_total'] = int(re.search(r"Total Quantity Secondary\s+(\d+)", line).group(1))
+            except (ValueError, AttributeError):
+                print("Could not parse secondary total from line:", line)
+            break  # Assuming no more relevant data after "Total Quantity Secondary"
+
+        parts = line.split()
+        if not item_lines_started:
+            if parts[0] == "Item" and parts[-1] == "Transfer":
+                item_lines_started = True
+                continue
+
+        if item_lines_started and len(parts) >= 3:
+            if "Sales" in line or "Rep." in line or "Authorization" in line or line.startswith("Total Quantity"):
+                continue
+
+            # Ensure we do not process the lines for totals as items
+            if parts[0].startswith("Total"):
+                continue
+
+            item_number = parts[0]
+            description = " ".join(parts[1:-2])  # Ensure accurate parsing of description
+            transfer_quantity = parts[-1]  # Ensure accurate capture of transfer quantity
+            item_data = {
+                'ItemNumber': item_number,
+                'ItemDescription': description,
+                'Quantity': transfer_quantity
+            }
+            transfer_data['items'].append(item_data)
+
+    return transfer_data
 
 
-
-# Example usage
-# parsed_data = parse_email(raw_email_content)
-# insert_order_into_mongodb(parsed_data)
-def get_last_parsed_email_id(client, db_name='mydatabase', status_collection='status'):
-    db = client[db_name]
-    collection = db[status_collection]
-    status_document = collection.find_one({'variable': 'last_parsed'})
-    last_parsed_email_id = status_document.get('value') if status_document else None
-    return last_parsed_email_id
+    # Save to MongoDB
 
 
-def get_latest_email_id(email_address, password):
-    mail = imaplib.IMAP4_SSL('imap.gmail.com')
-    mail.login(email_address, password)
-    mail.select('inbox')
-    status, email_ids = mail.search(None, 'ALL')
-    if status != 'OK':
-        print("No emails found!")
-        return None
-    last_email_id = email_ids[0].split()[-1].decode()
-    mail.close()
-    mail.logout()
-    return last_email_id
+def insert_transfer_to_mongodb(transfer_data):
+    uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
+    client = MongoClient(uri)
+    db = client['mydatabase']
+    collection = db['transfers']
+
+    if transfer_data and 'transfer_id' in transfer_data and transfer_data['items']:
+        # Create a filter for the transfer ID
+        filter = {'transfer_id': transfer_data['transfer_id']}
+        # Update the document with the new transfer data, or insert it if it doesn't exist
+        result = collection.update_one(filter, {'$set': transfer_data}, upsert=True)
+
+        # Check if the operation resulted in an update or insert (upsert)
+        if result.upserted_id:
+            print(f"Transfer data inserted with record id: {result.upserted_id}")
+        else:
+            print(f"Transfer data updated for transfer_id: {transfer_data['transfer_id']}")
+    else:
+        print("Invalid transfer data. Make sure it contains 'transfer_id' and 'items'.")
+
+    client.close()
+
+
+def process_transfer_email(raw_email, client):
+    attachments, body_text = extract_pdf_attachments_and_body(raw_email)
+    transfer_id = extract_transfer_id_from_body(body_text)  # Extract transfer ID from email body
+    for filename, content in attachments:
+        transfer_data = parse_transfer_pdf(content)
+        if transfer_data and transfer_id:
+            transfer_data['transfer_id'] = transfer_id  # Include the transfer ID in your transfer data
+            insert_transfer_to_mongodb(transfer_data)
 
 
 def fetch_unread_emails(email_address, password):
-    """
-    Fetches unread emails from the Gmail account.
-    """
     mail = imaplib.IMAP4_SSL('imap.gmail.com')
     mail.login(email_address, password)
     mail.select('inbox')
 
-    # Search for unread emails
     result, data = mail.search(None, 'UNSEEN')
     if result != 'OK':
         print("Failed to retrieve unread emails.")
         return []
-
-    if data is None:
-        print("All orders parsed")
 
     email_ids = data[0].split()
     emails = []
@@ -263,31 +574,35 @@ def fetch_unread_emails(email_address, password):
     return emails
 
 
-def check_and_parse_new_emails(email_address, email_password, client, db_name='mydatabase', orders_collection='orders'):
-    """
-    Fetches unread emails, parses them, and inserts order details into MongoDB.
-    """
-    unread_emails = fetch_unread_emails(email_address, email_password)
-
-    for raw_email in unread_emails:
-        email_message = email_lib.message_from_bytes(raw_email)
-        subject = str(email_lib.header.make_header(email_lib.header.decode_header(email_message['Subject'])))
-
-        if 'Concord Peet\'s Route Replenishment Submission' in subject:
-            parsed_data = parse_email_content(raw_email)
-            if parsed_data is not None:
-                insert_order_into_mongodb(parsed_data, client, db_name, orders_collection)
-
-
-# Example usage
-# client = MongoClient('mongodb://localhost:27017/')  # or your MongoDB connection details
-# check_and_parse_new_emails('your_email@gmail.com', 'your_password', client)
+def classify_and_process_emails(emails, client):
+    # Loop through each email
+    for raw_email in emails:
+        if is_inventory_email(raw_email):
+            process_inventory_email(raw_email, client)
+            print("IS")
+        elif is_order_email(raw_email):
+            process_order_email(raw_email, client)
+            print("Order")
+        elif is_transfer_email(raw_email):
+            process_transfer_email(raw_email, client)
+            print("TR")
+        else:
+            print("Unknown email type.")
 
 
-if __name__ == '__main__':
-    email = "GJTat901@gmail.com"
-    password = "xnva kbzm flsa szzo"
-    uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
-    client = MongoClient(uri)
+def main():
+    # Load environment variables from .env file
+    load_dotenv()
 
-    check_and_parse_new_emails(email, password, client, 'mydatabase', 'orders')
+    # Retrieve environment variables
+    email_address = os.getenv('EMAIL_ADDRESS')
+    password = os.getenv('EMAIL_PASSWORD')
+    db_uri = os.getenv('DB_URI')
+
+    # Connect to MongoDB using the URI from environment variables
+    client = MongoClient(db_uri)
+
+    # Assume fetch_unread_emails and classify_and_process_emails are defined elsewhere
+    emails = fetch_unread_emails(email_address, password)
+    classify_and_process_emails(emails, client)
+
