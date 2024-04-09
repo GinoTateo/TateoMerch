@@ -78,11 +78,10 @@
                     {% endif %}
                 </div>
             </article>
-            {% endfor %}
-        </div>
-    </div>
 
-    <div class="modal fade" id="prepareOrderModal" tabindex="-1" role="dialog" aria-labelledby="prepareOrderModalLabel" aria-hidden="true">
+
+
+        <div class="modal fade" id="prepareOrderModal" tabindex="-1" role="dialog" aria-labelledby="prepareOrderModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
@@ -103,54 +102,120 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary btn-lg" data-dismiss="modal">Close</button>
-                        <button type="button" id="pdfButton" class="btn btn-warning btn-lg" data-pdf-url="/path/to/pdf">PDF</button>
-                        <button type="button" id="confirmButton" class="btn btn-success btn-lg">Confirm</button>
+                        <button type="button" id="pdfButton" class="btn btn-warning btn-lg">PDF</button>
+                        <button type="button" id="confirmButton" class="btn btn-success btn-lg" data-order-id="{{ order.order_id }}" >Confirm</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+
+
+
+
+            {% endfor %}
+        </div>
+    </div>
+
+
     {% endblock %}
 </body>
+
 <script>
 $(document).ready(function() {
-    $('.complete-order').click(function() {
-        var orderId = $(this).data('order-id');
-        var button = $(this); // Button reference for use in callbacks
-        var scrollPosition = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
-        sessionStorage.setItem('scrollPosition', scrollPosition.toString());
 
-        $.ajax({
-            url: '/ops/warehouse/order/' + orderId + '/complete/',
-            type: 'POST',
-            data: {'order_id': orderId, 'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val()},
-            headers: {'X-CSRFToken': $('meta[name="csrf-token"]').attr('content')},
-            success: function(response) {
-                button.closest('article').find('.status-pending, .status-preparing').removeClass('status-pending status-preparing').addClass('status-complete').text('Complete');
-                button.remove(); // Remove the "Complete" button after the status update
-                window.location.reload(); // Reload the page after status update
-            },
-            error: function(xhr, status, error) {
-                console.error('Error completing order:', error);
-                alert('Could not complete the order. Please try again.');
-            }
-        });
+    $('.btn-warning.align-items-end').on('click', function() {
+        var orderId = $(this).data('order-id'); // Get the order ID from the clicked button
+        $('#confirmButton').data('order-id', orderId); // Set it on the "Confirm" button
     });
 
-    // Scroll to the saved position after the page reloads
+    $('#confirmButton').click(function() {
+        var orderId = $(this).data('order-id'); // Retrieve the order ID
+        confirmPrepare(orderId); // Now this will have the correct order ID
+    });
+
+    $('#pdfButton').click(function(e) {
+        e.preventDefault();
+        openPDF();
+    });
+
     var savedScrollPosition = sessionStorage.getItem('scrollPosition');
     if (savedScrollPosition) {
         window.scrollTo(0, parseInt(savedScrollPosition, 10));
         sessionStorage.removeItem('scrollPosition');
     }
-
-    $('#pdfButton').click(function(e) {
-        e.preventDefault(); // Prevent form submission
-        var modal = $('#prepareOrderModal');
-        var orderId = modal.data('order-id');
-        var pdfUrl = `/ops/warehouse/order/${orderId}/pdf/`;
-        window.open(pdfUrl, '_blank');
-    });
 });
+
+$('.complete-order').click(function() {
+    var orderId = $(this).data('order-id');
+    console.log(orderId); // Check if this logs the correct order ID
+    saveScrollAndReload(orderId)
+});
+
+function saveScrollAndReload(orderId) {
+    var scrollPosition = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    sessionStorage.setItem('scrollPosition', scrollPosition.toString());
+
+            var button = $(this); // Button reference for use in callbacks
+            var scrollPosition = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+            sessionStorage.setItem('scrollPosition', scrollPosition.toString());
+
+            $.ajax({
+                url: '/ops/warehouse/order/' + orderId + '/complete/',
+                type: 'POST',
+                data: {'order_id': orderId, 'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val()},
+                headers: {'X-CSRFToken': $('meta[name="csrf-token"]').attr('content')},
+                success: function (response) {
+                    button.closest('article').find('.status-pending, .status-preparing').removeClass('status-pending status-preparing').addClass('status-complete').text('Complete');
+                    button.remove(); // Remove the "Complete" button after the status update
+                    window.location.reload(); // Reload the page after status update
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error completing order:', error);
+                    alert('Could not complete the order. Please try again.');
+                }
+            });
+}
+
+
+function confirmPrepare(orderId) {
+      var selectedBuilder = $('#builder_name').val();
+        console.log("Confirming order:", orderId, "with builder:", selectedBuilder);
+
+
+            console.log(orderId)
+
+            // Save current scroll position before sending the AJAX request
+            var scrollPosition = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+            sessionStorage.setItem('scrollPosition', scrollPosition.toString());
+
+            $.ajax({
+                url: `/ops/api/update-builder/${orderId}/`, // Your API endpoint to update the builder
+                type: 'POST',
+                data: {
+                    builder_name: selectedBuilder,
+                    csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val()
+                },
+                headers: {
+                    'X-CSRFToken': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function (response) {
+                    console.log('Builder updated successfully');
+                    // Reload the page after a successful AJAX call
+                    window.location.reload();
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error updating builder:', error);
+                }
+            });
+}
+
+function openPDF() {
+    // Open the PDF in a new tab
+    var modal = $('#prepareOrderModal');
+    var orderId = modal.data('order-id');
+    var pdfUrl = `/ops/warehouse/order/${orderId}/pdf/`;
+    window.open(pdfUrl, '_blank');
+}
 </script>
 </html>

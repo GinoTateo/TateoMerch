@@ -1,12 +1,13 @@
 import json
 from datetime import datetime, timedelta
+
 import pandas as pd
 import plotly.express as px
-import qrcode
 from bson.objectid import ObjectId
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse
+from django.http import HttpResponseRedirect
 from django.http import JsonResponse, Http404
 from django.shortcuts import get_object_or_404, redirect
 from django.shortcuts import render
@@ -22,11 +23,7 @@ from account.models import Account
 from operations.email_parse_util import main
 from operations.filters import ItemFilter
 from operations.models import Item, Order, OrderItem, Warehouse, OutOfStockItem
-import qrcode
-from io import BytesIO
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-from django.http import HttpResponse
+
 
 # Assuming this function is correctly getting MongoDB client and fetching data
 def get_mongodb_client():
@@ -589,6 +586,8 @@ def complete_order(request, order_id):
         if start_time:
             duration = completion_time - start_time
             duration_in_seconds = duration.total_seconds()
+        else:
+            duration_in_seconds = 0
             # Optionally convert to minutes or hours as needed
 
         # Update the order's status to "Complete" and completion time
@@ -1327,6 +1326,7 @@ def add_items(request, order_id):
     return JsonResponse({'success': True, 'message': 'Items successfully added to the order'})
 
 
+@csrf_exempt
 def trigger_process_order(request):
     # Assuming your function might need data from the request
     # You might want to process the request body to get the data
@@ -1336,12 +1336,21 @@ def trigger_process_order(request):
 
 
 def update_builder(request, order_id):
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
+
     try:
         uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
         client = MongoClient(uri)
         db = client['mydatabase']
         collection = db['orders']
         builder_name = request.POST.get('builder_name')
+
+        builder_name = request.POST.get('builder_name')
+
+        if not builder_name:
+            return JsonResponse({'error': 'Missing builder_name'}, status=400)
 
         # Perform the update
         result = collection.update_one(
