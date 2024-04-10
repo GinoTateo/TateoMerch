@@ -39,6 +39,7 @@ CELERY_BROKER_URL = 'redis://localhost:6379/0'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
+
 ALLOWED_HOSTS = ['127.0.0.1', 'https://shipteo.onrender.com/', 'shipteo.onrender.com', 'shipteo.com',
                  'https://www.shipteo.com/', 'www.shipteo.com', "192.168.5.70"]
 

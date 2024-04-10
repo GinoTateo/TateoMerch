@@ -310,6 +310,7 @@ def WarehouseList(request):
     return render(request, 'warehouse_list.html', {'warehouses': warehouses})
 
 
+@login_required
 def warehouse_dashboard(request, warehouse_id):
     # Assuming you have a Django model Warehouse
     try:
@@ -413,6 +414,7 @@ def WarehouseManagerDetail(request, warehouse_id):
                   {'warehouse': warehouse, 'routes': routes, 'user': user, 'orders': orders})
 
 
+@login_required
 def WarehouseManagerOrderStatusUpdate(request, order_id):
     order = Order.objects.get(id=order_id)
 
@@ -426,18 +428,21 @@ def WarehouseManagerOrderStatusUpdate(request, order_id):
     return WarehouseManagerOrderStatusDetail(request, order_id)
 
 
+@login_required
 def WarehouseManagerOrderStatusView(request):
     orders = Order.objects.all()
 
     return render(request, 'OrderStatusView.html', {'orders': orders})
 
 
+@login_required
 def WarehouseManagerOrderStatusDetail(request, order_id):
     order = Order.objects.get(id=order_id)
 
     return render(request, 'OrderStatusDetail.html', {'order': order})
 
 
+@login_required
 def orders_view(request):
     uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
     client = MongoClient(uri)
@@ -497,6 +502,7 @@ def orders_view(request):
     return render(request, 'orders/order_view.html', {'orders': orders, 'routes': routes})
 
 
+@login_required
 def edit_order(request, order_id):
     try:
         uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
@@ -526,6 +532,7 @@ def edit_order(request, order_id):
 
     client.close()
     return redirect("ops:edit_order", order_id)
+
 
 
 def prepare_order(request, order_id):
@@ -615,6 +622,7 @@ def complete_order(request, order_id):
     return JsonResponse({'success': True})
 
 
+@login_required
 def order_detail_view(request, order_id):
     # Directly create a MongoDB client instance
     edit_mode = 'edit' in request.GET and request.GET['edit'] == 'true'
@@ -675,6 +683,7 @@ def order_detail_view(request, order_id):
     })
 
 
+@login_required
 def generate_order_pdf(request, order_id):
     uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
     client = MongoClient(uri)
@@ -880,7 +889,7 @@ def verify_order(request, order_id):
             {"transfer_id": {"$regex": ".*" + str(order['_id'])[-4:] + "$"}})
 
         if not order or not matching_transfer:
-            return JsonResponse({"error": "Order or matching transfer not found"}, status=404)
+            return render(request, 'error_page.html', {'error': "Transfer not found in database."})
 
         order_items = order.get('items', [])
         transfer_items = matching_transfer.get('items', [])

@@ -419,18 +419,16 @@ def extract_pdf_attachments_and_body(raw_email):
 
 
 # Extract 4-digit code from email body
-def extract_transfer_id_from_body(body_text):
-    # Debug print to check the actual body text received
-    print("DEBUG - Email Body Text:", body_text[:500])  # Print the first 500 characters for inspection
+def extract_transfer_id_from_subject(raw_email):
+    subject = raw_email['subject']
 
-    # Adjusted regex to match a 4-character combination of letters and digits
-    # This regex looks for a pattern with exactly 4 characters, each can be a letter (a-zA-Z) or a digit (\d)
-    match = re.search(r'\b[a-zA-Z\d]{4}\b', body_text)
+    # Example using regular expression to find a series of digits at the end of the subject
+    match = re.search(r'\b(\d+)$', subject)
     if match:
-        print("DEBUG - Found Transfer ID:", match.group(0))
+        print("Found Transfer ID:", match.group(0))
         return match.group(0)
     else:
-        print("DEBUG - No Transfer ID found")
+        print("No Transfer ID found")
         return None
 
 
@@ -518,9 +516,7 @@ def parse_transfer_pdf(pdf_content):
     # Save to MongoDB
 
 
-def insert_transfer_to_mongodb(transfer_data):
-    uri = "mongodb+srv://gjtat901:koxbi2-kijbas-qoQzad@cluster0.abxr6po.mongodb.net/?retryWrites=true&w=majority"
-    client = MongoClient(uri)
+def insert_transfer_to_mongodb(transfer_data, client):
     db = client['mydatabase']
     collection = db['transfers']
 
@@ -543,12 +539,13 @@ def insert_transfer_to_mongodb(transfer_data):
 
 def process_transfer_email(raw_email, client):
     attachments, body_text = extract_pdf_attachments_and_body(raw_email)
-    transfer_id = extract_transfer_id_from_body(body_text)  # Extract transfer ID from email body
+    transfer_id = extract_transfer_id_from_subject(raw_email)  # Now extracting from subject
+
     for filename, content in attachments:
         transfer_data = parse_transfer_pdf(content)
         if transfer_data and transfer_id:
             transfer_data['transfer_id'] = transfer_id  # Include the transfer ID in your transfer data
-            insert_transfer_to_mongodb(transfer_data)
+            insert_transfer_to_mongodb(transfer_data, client)
 
 
 def fetch_unread_emails(email_address, password):

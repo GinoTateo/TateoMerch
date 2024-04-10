@@ -13,7 +13,7 @@ urlpatterns = [
     path('<user_id>/edit/', views.edit_account_view, name="edit"),
     # path('account', views.account, name='account'),
     path('login', views.login_view, name='login'),
-    # path('register', views.login_view, name='login'),
+    path('register', views.register_view, name='register'),
     path('logout', views.logout_view, name='logout'),
     # path('register', views.register_view, name='register'),
 

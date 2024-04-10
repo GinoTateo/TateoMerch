@@ -15,6 +15,41 @@
         }
         .text-higher { color: #198754; } /* Bootstrap success color */
         .text-lower { color: #dc3545; } /* Bootstrap danger color */
+        body {
+            background-color: #f8f9fa; /* Soft background color */
+            font-family: 'Nunito', sans-serif; /* Optional: Change to a more readable font */
+        }
+
+        main.container {
+            padding-top: 20px; /* Adding some space on the top */
+        }
+
+        h2 {
+            color: #007bff; /* Bootstrap primary color for headings */
+            font-weight: 700; /* Bold font for headings */
+            margin-bottom: 20px; /* Spacing below headings */
+        }
+
+        .table-responsive-custom {
+            border-radius: 10px; /* Rounded corners for tables */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Subtle shadow for depth */
+            padding: 20px; /* Padding inside the table container */
+            background-color: #ffffff; /* White background for contrast */
+            margin-bottom: 30px; /* Spacing between tables */
+        }
+
+        .table {
+            margin-bottom: 0; /* Remove default margin from Bootstrap tables */
+        }
+
+        @media (max-width: 768px) {
+            .table-smaller {
+                font-size: 0.75rem; /* Reduced font size on smaller screens */
+            }
+            .table-smaller td, .table-smaller th {
+                padding: .3rem; /* Reduced padding on smaller screens */
+            }
+        }
     </style>
 </head>
 <body>
@@ -22,22 +57,21 @@
 {% extends 'navbar.html' %}
 {% block content %}
 {% load custom_filters %}
-<main class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Inventory List with 6-Week Average</h2>
-    </div>
 
-    <div class="table-responsive">
-        <table class="table table-hover table-custom">
-            <thead class="table-light">
-                <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Item Number</th>
-                    <th scope="col">Item Name</th>
-                    <th scope="col">Cases</th>
-                    <th scope="col">6 Week Avg</th>
-                    <th scope="col">Weeks of Supply</th>
-                </tr>
+<main class="container">
+    <!-- Inventory List Table -->
+    <div class="table-responsive text-nowrap table-responsive-custom">
+        <h2>Run Rates</h2>
+        <table class="table table-hover table-smaller">
+            <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Item Number</th>
+                <th scope="col">Item Name</th>
+                <th scope="col">Cases</th>
+                <th scope="col">6 Week Avg</th>
+                <th scope="col">Weeks of Supply</th>
+            </tr>
             </thead>
             <tbody>
                 {% for item in items_with_avg %}
