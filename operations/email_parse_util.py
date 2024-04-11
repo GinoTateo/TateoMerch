@@ -1,6 +1,4 @@
 import email as email_lib
-from email.header import make_header, decode_header
-
 from dotenv import load_dotenv
 from pymongo import MongoClient
 from email import policy
@@ -420,19 +418,26 @@ def extract_pdf_attachments_and_body(raw_email):
 
 
 # Extract 4-digit code from email body
+from email import message_from_bytes
+from email.header import decode_header, make_header
+
+
 def extract_transfer_id_from_subject(raw_email_bytes):
     # Parse the raw email bytes into a MIME message object
-    msg = email_lib.message_from_bytes(raw_email_bytes)
+    msg = message_from_bytes(raw_email_bytes)
 
     # Access the subject or other headers directly
     subject = str(make_header(decode_header(msg['subject'])))
 
-
+    # Adjusted regular expression to match alphanumeric characters
+    # This pattern assumes that the ID does not start with a digit.
+    # Adjust the pattern as needed based on the expected format of your IDs.
     match = re.search(r'\b[A-Za-z0-9]+\b', subject)
     if match:
         return match.group(0)  # Return the first occurrence of alphanumeric pattern
     else:
         return None  # No ID found
+
 
 
 # Parse PDF for transfer information
@@ -537,7 +542,7 @@ def insert_transfer_to_mongodb(transfer_data, client):
     else:
         print("Invalid transfer data. Make sure it contains 'transfer_id' and 'items'.")
 
-    client.close()
+    # client.close()
 
 
 def process_transfer_email(raw_email, client):
@@ -590,6 +595,7 @@ def classify_and_process_emails(emails, client):
             print("Unknown email type.")
 
 
+
 def main():
     # Load environment variables from .env file
     load_dotenv()
@@ -605,4 +611,3 @@ def main():
     # Assume fetch_unread_emails and classify_and_process_emails are defined elsewhere
     emails = fetch_unread_emails(email_address, password)
     classify_and_process_emails(emails, client)
-

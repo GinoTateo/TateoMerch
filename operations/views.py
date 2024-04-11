@@ -910,7 +910,7 @@ def verify_order(request, order_id):
             transfer_item = transfer_item_dict.get(item_number)
             if transfer_item:
                 transfer_quantity = int(transfer_item['Quantity'])
-                variance = order_quantity - transfer_quantity
+                variance = transfer_quantity - order_quantity
                 adjustments = variance + adjustments
                 is_oos = item_number in oos_item_numbers
                 items_with_variances.append({
@@ -944,8 +944,9 @@ def verify_order(request, order_id):
                 'ItemDescription': item_description,
                 'OrderQuantity': 0,
                 'TransferQuantity': transfer_quantity,
-                'Variance': -transfer_quantity,
+                'Variance': transfer_quantity,
                 'IsOOS': False,  # Assuming these cannot be OOS as they were transferred
+                'Unordered': True
             })
 
         return render(request, 'orders/order_verification.html', {
@@ -1337,11 +1338,8 @@ def add_items(request, order_id):
 
 @csrf_exempt
 def trigger_process_order(request):
-    # Assuming your function might need data from the request
-    # You might want to process the request body to get the data
-    main()
-    response_data = "Success"
-    return JsonResponse(response_data, safe=False)  # Return a JSON response
+    response_data = main()
+    return JsonResponse(response_data, safe=False)
 
 
 def update_builder(request, order_id):

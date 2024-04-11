@@ -75,15 +75,19 @@
                             <tbody>
                                 {% for item in order_items %}
                                 <tr>
+                                {% if item.Unordered %}
+                                    <td> <span style="color: red;">{{ item.ItemNumber }}</span></td>
+                                {% else %}
                                     <td>{{ item.ItemNumber }}</td>
+                                {% endif %}
                                     <td>{{ item.ItemDescription }}</td>
                                     <td>{{ item.OrderQuantity }}</td>
                                     <td>{{ item.TransferQuantity }}</td>
                                     <td>
-                                        {% if item.Variance %}
+                                        {% if item.Variance is not 0 %}
                                         <span style="color: red;">{{ item.Variance }}</span>
                                         {% else %}
-                                        {{ item.Variance }}
+
                                         {% endif %}
                                     </td>
                                     <td>
