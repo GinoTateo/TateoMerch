@@ -1,4 +1,5 @@
 import email as email_lib
+from email.header import make_header, decode_header
 
 from dotenv import load_dotenv
 from pymongo import MongoClient
@@ -419,17 +420,19 @@ def extract_pdf_attachments_and_body(raw_email):
 
 
 # Extract 4-digit code from email body
-def extract_transfer_id_from_subject(raw_email):
-    subject = raw_email['subject']
+def extract_transfer_id_from_subject(raw_email_bytes):
+    # Parse the raw email bytes into a MIME message object
+    msg = email_lib.message_from_bytes(raw_email_bytes)
 
-    # Example using regular expression to find a series of digits at the end of the subject
-    match = re.search(r'\b(\d+)$', subject)
+    # Access the subject or other headers directly
+    subject = str(make_header(decode_header(msg['subject'])))
+
+
+    match = re.search(r'\b[A-Za-z0-9]+\b', subject)
     if match:
-        print("Found Transfer ID:", match.group(0))
-        return match.group(0)
+        return match.group(0)  # Return the first occurrence of alphanumeric pattern
     else:
-        print("No Transfer ID found")
-        return None
+        return None  # No ID found
 
 
 # Parse PDF for transfer information
