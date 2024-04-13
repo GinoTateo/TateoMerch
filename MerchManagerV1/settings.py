@@ -53,6 +53,9 @@ INSTALLED_APPS = [
     'rsr',
     'operations',
     'MerchManagerV1',
+    'middleware.rate_middleware',
+    'middleware.multi_404_block_middleware',
+    'middleware.block_non_local_IP',
 
     # Third party apps
     'django.contrib.admin',
