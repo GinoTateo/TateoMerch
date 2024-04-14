@@ -24,11 +24,11 @@ urlpatterns = [
     path('account/', include('account.urls')),
     # path('merch/', include('merch.urls')), Branched into its own plateform
     path('ops/', include('operations.urls')),
-    path('rsr/', include('rsr.urls')),
-    path('api/', include('api.urls')),
+    # path('rsr/', include('rsr.urls')),
+    # path('api/', include('api.urls')),
 
     # Service & Pricing
-    path('service', views.service, name='service'),
+    # path('service', views.service, name='service'),
 
     # Home
     path('', views.home, name='home'),

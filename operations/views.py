@@ -6,6 +6,7 @@ import plotly.express as px
 from bson.objectid import ObjectId
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.http import JsonResponse, Http404

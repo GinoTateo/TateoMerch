@@ -19,6 +19,7 @@ from django.contrib import staticfiles
 from django.contrib.messages import constants as messages
 from cloudinary.uploader import upload
 from cloudinary.utils import cloudinary_url
+from django.core.cache import cache
 
 from operations.templatetags import custom_filters
 
@@ -221,4 +222,16 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': crontab(minute='*/5', hour='5-14', day_of_week='*'),
         'args': (),
     },
+}
+
+REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379')
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': REDIS_URL,
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
 }
