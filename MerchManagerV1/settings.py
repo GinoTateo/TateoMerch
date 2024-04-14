@@ -33,13 +33,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY', default='your secret key')
 
-
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
-
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
-
 
 ALLOWED_HOSTS = ['127.0.0.1', 'https://shipteo.onrender.com/', 'shipteo.onrender.com', 'shipteo.com',
                  'https://www.shipteo.com/', 'www.shipteo.com', "192.168.5.70"]
@@ -207,7 +204,6 @@ MESSAGE_TAGS = {
     messages.ERROR: 'alert-danger',
 }
 
-
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'MerchManagerv1.settings')
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'MerchManagerV1.settings')
@@ -235,3 +231,27 @@ CACHES = {
         }
     }
 }
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'django.log'),
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
+
+IP_BLOCK_THRESHOLD = 10
+IP_BLOCK_EXPIRE = 600
